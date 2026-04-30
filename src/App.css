@@ -1,0 +1,15 @@
+/* App-specific styles */
+.btn {
+  display: inline-block;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+.btn:active {
+  transform: translateY(0);
+}

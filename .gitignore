@@ -1,0 +1,30 @@
+# Dependencies & build
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Generated / local-only asset sync (run: npm run sync-portfolio)
+public/portfolio/
+
+# Local masters vault if copied next to this repo
+01-MASTERS/
+
+# Quarantined legacy / staging (moved out of active tree)
+QUARANTINE/
+
+# Optional local “Portfolio” folder copy at repo root
+Portfolio/
+
+# macOS
+.DS_Store
+*.DS_Store
+
+# Editor
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Logs
+*.log
+npm-debug.log*
