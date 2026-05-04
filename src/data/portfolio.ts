@@ -470,6 +470,69 @@ const epsGlitz: PortfolioItem = {
   featured: false,
 };
 
+const nikeZionJpg = Array.from({ length: 14 }, (_, i) => {
+  const n = String(i + 1).padStart(3, '0');
+  return `${n}.jpg`;
+});
+
+const nikeZion: PortfolioItem = {
+  id: 'nike-zion',
+  title: 'Nike Zion Footwear',
+  client: 'Nike',
+  year: '2000–2006',
+  categories: ['footwear'],
+  images: nikeZionJpg,
+  assetFile: 'NikeZion-Portfolio.pdf',
+  pageCount: 14,
+  tagline: 'Basketball footwear concept development.',
+  story:
+    'Nike Zion-era basketball footwear exploration — concept sketches and range development aligned with performance and brand direction.',
+  skillsDemo: ['Footwear design', 'Basketball performance', 'Concept development', 'Nike brand'],
+  featured: false,
+};
+
+const hwTriNStopJpg = Array.from({ length: 7 }, (_, i) => {
+  const n = String(i + 1).padStart(3, '0');
+  return `${n}.jpg`;
+});
+
+const hwTriNStopMe: PortfolioItem = {
+  id: 'hw-tri-n-stop-me',
+  title: 'Hot Wheels Tri-N-Stop Me',
+  client: 'Mattel',
+  year: '2006–2011',
+  categories: ['toys'],
+  images: hwTriNStopJpg,
+  assetFile: 'TriNStop-Portfolio.pdf',
+  pageCount: 7,
+  tagline: 'Play pattern and vehicle design for the Tri-N-Stop Me line.',
+  story:
+    'Hot Wheels Tri-N-Stop Me — vehicle and play-pattern work synced from the Tri-N-Stop masters folder.',
+  skillsDemo: ['Vehicle design', 'Play pattern', 'Hot Wheels', 'Die-cast'],
+  featured: false,
+};
+
+const drgnFliDesignJpg = Array.from({ length: 15 }, (_, i) => {
+  const n = String(i + 1).padStart(3, '0');
+  return `${n}.jpg`;
+});
+
+const drgnFliDesign: PortfolioItem = {
+  id: 'drgn-fli',
+  title: 'DRGN | FLI',
+  client: 'Original IP',
+  year: '2025–Present',
+  categories: ['independent-ip', 'art'],
+  images: drgnFliDesignJpg,
+  assetFile: 'DRGNFLI-Concepts.pdf',
+  pageCount: 15,
+  tagline: 'Visual development for the DRGN | FLI game world.',
+  story:
+    'Concept and key art for DRGN | FLI — visual development alongside the Swift iOS build (see Software for implementation status).',
+  skillsDemo: ['Character and world ideation', 'Game art direction', 'Original IP'],
+  featured: false,
+};
+
 const marmot: PortfolioItem = {
   id: 'marmot',
   title: 'Marmot Container Systems',
@@ -585,6 +648,7 @@ const conceptArt: PortfolioItem = {
 export const portfolioItems: PortfolioItem[] = [
   customMotors,
   twinduction,
+  hwTriNStopMe,
   hwCrashers,
   acan0,
   nikeAcg,
@@ -594,11 +658,13 @@ export const portfolioItems: PortfolioItem[] = [
   marmot,
   hwArt,
   epsGlitz,
+  nikeZion,
   pawPatrol,
   giJoe,
   valaverse,
   powerRangers,
   mashie,
+  drgnFliDesign,
   conceptArt,
 ];
 

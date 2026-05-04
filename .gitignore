@@ -5,7 +5,9 @@ dist-ssr/
 *.local
 
 # Generated / local-only asset sync (run: npm run sync-portfolio)
-public/portfolio/
+public/portfolio/*
+!public/portfolio/**/
+!public/portfolio/**/band.jpg
 
 # Local masters vault if copied next to this repo
 01-MASTERS/
@@ -13,8 +15,8 @@ public/portfolio/
 # Quarantined legacy / staging (moved out of active tree)
 QUARANTINE/
 
-# Optional local “Portfolio” folder copy at repo root
-Portfolio/
+# Optional local “Portfolio” folder copy at repo root (anchor so it does not match public/portfolio/)
+/Portfolio/
 
 # macOS
 .DS_Store
