@@ -100,7 +100,7 @@ function EraSection({ era, isLast }: { era: Era; isLast: boolean }) {
 
 export function JourneyPage() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen">
       <div className="max-w-[1600px] mx-auto px-medium py-xlarge">
         <h1 className="text-h1 mb-large">John's Journey</h1>
         <p className="text-body mb-xlarge">

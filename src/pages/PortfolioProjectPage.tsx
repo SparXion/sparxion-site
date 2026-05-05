@@ -22,7 +22,7 @@ export function PortfolioProjectPage() {
     : null;
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen">
       <div className="max-w-[900px] mx-auto px-medium py-large">
         <Link
           to="/portfolio"

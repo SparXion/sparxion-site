@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 
 export function UCIDPage() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen">
       <div className="max-w-[1600px] mx-auto px-medium py-xlarge">
         <div className="text-center mb-xlarge">
           <h1 className="text-h1 mb-large">UCID App</h1>

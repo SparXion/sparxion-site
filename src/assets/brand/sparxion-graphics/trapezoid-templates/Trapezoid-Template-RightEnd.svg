@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Right-end cap for portfolio band strip. Matches Illustrator export polygon (includes trailing edge toward x max). -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 659.1 296" role="presentation">
+  <polygon points="299.1 0 659.1 0 659.6 296 0 296" fill="black" />
+</svg>

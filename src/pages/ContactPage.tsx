@@ -1,6 +1,6 @@
 export function ContactPage() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen">
       <div className="max-w-[1600px] mx-auto px-medium py-xlarge">
         <div className="max-w-2xl mx-auto">
           <h1 className="text-h1 mb-large">Contact</h1>

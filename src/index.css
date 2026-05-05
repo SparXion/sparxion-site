@@ -12,6 +12,7 @@ body {
   font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: hsl(0, 0%, 100%);
 }
 
 #root {
@@ -19,6 +20,7 @@ body {
   margin: 0;
   padding: 0;
   overflow-x: hidden;
+  background-color: hsl(0, 0%, 100%);
 }
 
 html, body {
@@ -27,4 +29,35 @@ html, body {
   width: 100%;
   height: 100%;
   overflow-x: hidden;
+}
+
+/* Unified home: document is as wide as positioning artboard; window (e.g. 1920) scrolls horizontally. */
+html.unified-band-page,
+html.unified-band-page body {
+  overflow-x: auto;
+}
+
+html.unified-band-page #root {
+  overflow-x: visible;
+  max-width: none;
+}
+
+html.unified-band-page {
+  --unified-page-width: calc(100vh * 12392.41 / 1080);
+}
+
+html.unified-band-page footer {
+  width: var(--unified-page-width);
+  max-width: none;
+  box-sizing: border-box;
+}
+
+/* Band strips: horizontal scroll without visible scrollbar (wheel / trackpad / drag still work). */
+.band-strip-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.band-strip-scroll::-webkit-scrollbar {
+  display: none;
 }

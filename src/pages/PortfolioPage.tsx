@@ -18,7 +18,7 @@ export function PortfolioPage() {
   const items = useMemo(() => getPortfolioItemsByCategory(category), [category]);
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen">
       <div className="max-w-[1600px] mx-auto px-medium py-large">
         <header className="mb-large max-w-3xl">
           <h1 className="text-h1 text-black mb-small">Portfolio</h1>

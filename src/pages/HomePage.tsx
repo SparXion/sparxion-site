@@ -1,51 +1,47 @@
-import { Link } from 'react-router-dom';
-import SparxionLanding from '../assets/Sparxion_Landing-003.svg';
+import { useEffect } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { LandingHero } from '../components/LandingHero';
+import { UNIFIED_BAND_PAGE_WIDTH_CSS } from '../lib/unifiedBandLayout';
 
 export function HomePage() {
+  const [searchParams] = useSearchParams();
+  const useUnifiedBand =
+    searchParams.get('unified') === '1' || searchParams.get('unified') === 'true';
+
+  useEffect(() => {
+    if (!useUnifiedBand) return;
+    document.documentElement.classList.add('unified-band-page');
+    return () => document.documentElement.classList.remove('unified-band-page');
+  }, [useUnifiedBand]);
 
   return (
-    <div style={{ 
-      margin: 0, 
-      padding: 0, 
-      minHeight: '100vh', 
-      backgroundColor: 'white', 
-      position: 'relative', 
-      width: '100%', 
-      overflow: 'hidden',
-      boxSizing: 'border-box'
-    }}>
-      <div style={{
-        position: 'absolute',
-        top: '35%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-        width: 'calc(100% - 40px)',
-        maxWidth: '1200px',
-        boxSizing: 'border-box'
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '0 20px' }}>
-          <img 
-            src={SparxionLanding} 
-            alt="SparXion - connecting humans with ai" 
-            style={{ 
-              display: 'block',
-              width: '100%',
-              maxWidth: '100%',
-              height: 'auto',
-              boxSizing: 'border-box'
-            }}
-          />
-        </div>
-      </div>
+    <div
+      style={{
+        margin: 0,
+        padding: 0,
+        backgroundColor: 'hsl(0, 0%, 100%)',
+        position: 'relative',
+        width: useUnifiedBand ? UNIFIED_BAND_PAGE_WIDTH_CSS : '100%',
+        minHeight: useUnifiedBand ? '100vh' : undefined,
+        overflowX: 'visible',
+        overflowY: 'visible',
+        boxSizing: 'border-box',
+      }}
+    >
+      <LandingHero useUnifiedBand={useUnifiedBand} />
+
       <div style={{ 
-        position: 'absolute', 
-        bottom: '50px', 
+        position: 'relative',
+        bottom: 'auto',
+        paddingBottom: '50px',
         left: '50%', 
         transform: 'translateX(-50%)', 
         zIndex: 10, 
         width: '100%', 
+        maxWidth: '1200px',
         textAlign: 'center',
-        padding: '0 20px',
+        paddingLeft: '20px',
+        paddingRight: '20px',
         boxSizing: 'border-box'
       }}>
         {/* Tagline */}

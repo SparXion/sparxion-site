@@ -24,7 +24,6 @@ import {
   bandTileInteractiveClipPath,
   BAND_TILE_VIEWBOX_H,
   BAND_TILE_VIEWBOX_W,
-  type BandTileVariant,
 } from './BandTile';
 
 /** Same stepping as `BandStrip` (Illustrator strip units). */
@@ -491,10 +490,10 @@ export const UnifiedBandStrip = forwardRef<BandStripHandle, UnifiedBandStripProp
           <div className="flex h-full min-h-0 flex-row flex-nowrap items-stretch">
             {softwareTiles.map((item, i) => {
               const baseVariant = softwareVariant(i, softwareTiles.length);
-              const isUcid = item.projectId === 'ucid';
-              const variant: BandTileVariant = isUcid ? 'cap-flat-left' : baseVariant;
-              const noTileClip = isUcid;
-              const clip = noTileClip ? 'none' : bandTileInteractiveClipPath(variant);
+              const isFirst = i === 0;
+              const variant = baseVariant;
+              const clip = isFirst ? 'none' : bandTileInteractiveClipPath(variant);
+              const noTileClip = isFirst;
               const overlapStyle =
                 i > 0
                   ? ({ marginLeft: layout.overlapMargin } as CSSProperties)
