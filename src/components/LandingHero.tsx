@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useNavigationType, NavigationType } from 'react-router-dom';
-import landingSvgRaw from '../assets/brand/sparxion-graphics/Sparxion_Landing_Sketch-Scale.svg?raw';
+import landingSvgRaw from '../assets/brand/sparxion-graphics/Illustrator Sketch Files/Sparxion_Landing_Sketch-Scale.svg?raw';
 import {
   clearLandingSession,
   consumeLandingPendingDesignTileNav,
@@ -16,6 +16,7 @@ import {
 import type { BandStripHandle } from './BandStrip';
 import { DesignBand } from './DesignBand';
 import { SoftwareBand } from './SoftwareBand';
+import { SoftwareBandV2 } from './SoftwareBandV2';
 import { BAND_TILE_VIEWBOX_H } from './BandTile';
 import { UnifiedBandStrip } from './UnifiedBandStrip';
 
@@ -24,6 +25,9 @@ const HERO_WHEEL_EPS = 1e-6;
 const STRIP_AT_END_PX = 3;
 
 const DEBUG_HERO_WHEEL = import.meta.env.DEV && false;
+
+/** When true, use inline clip computation (SoftwareBandV2) instead of SoftwareBand. */
+const USE_SOFTWARE_BAND_V2 = true;
 
 /**
  * When true, skip native `clip-path` on SVG `#hero-band-right` during unified expanded (debug only).
@@ -785,16 +789,29 @@ export function LandingHero({ useUnifiedBand = false }: LandingHeroProps) {
               maxRevealPx={maxRevealPx}
               xSeamPx={xSeamPx}
             />
-            <SoftwareBand
-              ref={softwareStripRef}
-              visible={softwareBandVisible}
-              seamPx={seamResolved}
-              maxRevealPx={maxRevealPx}
-              rightSeamPx={rightSeamPx}
-              tabIndex={bandsRevealed ? 0 : undefined}
-              role="link"
-              ariaLabel="Software"
-            />
+            {USE_SOFTWARE_BAND_V2 ? (
+              <SoftwareBandV2
+                ref={softwareStripRef}
+                visible={softwareBandVisible}
+                seamPx={seamResolved}
+                maxRevealPx={maxRevealPx}
+                rightSeamPx={rightSeamPx}
+                tabIndex={bandsRevealed ? 0 : undefined}
+                role="link"
+                ariaLabel="Software"
+              />
+            ) : (
+              <SoftwareBand
+                ref={softwareStripRef}
+                visible={softwareBandVisible}
+                seamPx={seamResolved}
+                maxRevealPx={maxRevealPx}
+                rightSeamPx={rightSeamPx}
+                tabIndex={bandsRevealed ? 0 : undefined}
+                role="link"
+                ariaLabel="Software"
+              />
+            )}
           </>
         ) : null}
       </div>
