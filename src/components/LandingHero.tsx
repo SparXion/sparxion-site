@@ -115,14 +115,6 @@ const heroCss = `
   max-height: min(92vh, calc(100vw * 1080 / 1920));
 }
 
-#x-mark-large-overlay svg {
-  width: 100%;
-  height: 100%;
-  position: absolute;
-  top: 0;
-  left: 0;
-}
-
 /* Band reveal + hover (Software wedge only; left half is DesignBand overlay) */
 .landing-hero-css-root svg #hero-band-right {
   opacity: 0;
@@ -234,6 +226,30 @@ const heroCss = `
     animation: none;
     --landing-x-t: 1;
   }
+}
+
+/* Overlay large X — appears only after grow animation completes, at final resting position */
+#x-mark-large-overlay svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+#x-mark-large-overlay svg #x-mark-large-2 {
+  translate: var(--landing-reveal-px) 0;
+  transform-box: view-box;
+  transform-origin: 0 0;
+}
+
+#x-mark-large-overlay svg {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.landing-hero-css-root--bands-revealed #x-mark-large-overlay svg {
+  visibility: visible;
+  opacity: 1;
 }
 
 /* Unified: hide static defs wedge paint; HTML shell carries the mask */
