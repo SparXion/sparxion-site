@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useNavigationType, NavigationType } from 'react-router-dom';
 import landingSvgRaw from '../assets/brand/sparxion-graphics/Illustrator Sketch Files/Sparxion_Landing_Sketch-Scale.svg?raw';
+import xMarkLargeSvg from '../assets/brand/sparxion-graphics/graphics-svg/x-mark-large.svg?raw';
 import {
   clearLandingSession,
   consumeLandingPendingDesignTileNav,
@@ -112,6 +113,14 @@ const heroCss = `
   width: 100%;
   height: auto;
   max-height: min(92vh, calc(100vw * 1080 / 1920));
+}
+
+#x-mark-large-overlay svg {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 
 /* Band reveal + hover (Software wedge only; left half is DesignBand overlay) */
@@ -814,6 +823,14 @@ export function LandingHero({ useUnifiedBand = false }: LandingHeroProps) {
             )}
           </>
         ) : null}
+        {/* STEP1-OVERLAY: standalone large X — same viewBox as hero, z-top, no animation yet */}
+        <div
+          id="x-mark-large-overlay"
+          aria-hidden
+          className="pointer-events-none absolute inset-0 z-[50]"
+          dangerouslySetInnerHTML={{ __html: xMarkLargeSvg }}
+          style={{ width: '100%', height: '100%' }}
+        />
       </div>
     </section>
   );

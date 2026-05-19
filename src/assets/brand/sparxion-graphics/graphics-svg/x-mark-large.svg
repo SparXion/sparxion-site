@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg id="X-Mark-Large" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 487.1 534.2">
+<svg id="x-mark-large" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080">
   <defs>
     <style>
       .cls-1 {
@@ -7,5 +7,5 @@
       }
     </style>
   </defs>
-  <path id="x-mark-large" class="cls-1" d="M0,183.6h0l109.1,178.6L.8,534.2h94.9l102.3-172-104.6-178.6H0ZM487.1,0h-99.3l-195.8,328.9,122.2,205.3h95.4l-128.7-205.3L487.1,0Z"/>
+  <path id="x-mark-large-2" data-name="x-mark-large" class="cls-1" d="M752.6,381.5h0s109.1,178.6,109.1,178.6l-108.3,172h94.9l102.3-172-104.6-178.6h-93.4ZM1239.7,197.9h-99.3l-195.8,328.9,122.2,205.3h95.4l-128.7-205.3,206.2-328.9Z"/>
 </svg>
