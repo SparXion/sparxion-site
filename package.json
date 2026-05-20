@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "sync-portfolio": "bash scripts/sync-portfolio-images.sh"
+    "sync-portfolio": "bash scripts/sync-portfolio-images.sh && node scripts/generate-portfolio-image-manifest.mjs"
   },
   "dependencies": {
     "react": "^18.2.0",

@@ -152,7 +152,9 @@ export const SoftwareBand = forwardRef<BandStripHandle, SoftwareBandProps>(funct
           ref={stripRef}
           items={stripItems}
           initialScrollLeft={0}
-          onSelectProject={() => navigate('/software')}
+          onSelectProject={(projectId) =>
+            navigate(`/software/${encodeURIComponent(projectId)}`)
+          }
           tileAriaLabelPrefix="Open software"
           ariaLabel="Software portfolio band"
           className="h-full min-h-0 min-w-0 flex-1"

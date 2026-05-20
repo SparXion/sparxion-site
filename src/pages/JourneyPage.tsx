@@ -121,7 +121,7 @@ export function JourneyPage() {
         {/* Closing block */}
         <div className="text-center mt-xlarge pt-xlarge border-t border-gray">
           <p className="text-body mb-large">
-            The equation remains the same: spark + action = delight at human scale.
+            the equation remains the same: spark x action = discovery.
           </p>
           <Link
             to="/projects"

@@ -291,10 +291,10 @@ export const BandStrip = forwardRef<BandStripHandle, BandStripProps>(function Ba
   const overlapMarginPx = `-100cqh * ${String(TILE_OVERLAP_U)} / ${String(BAND_TILE_VIEWBOX_H)}`;
 
   return (
-    <div role="region" aria-label={ariaLabel} className={`band-strip-root min-h-0 overflow-hidden ${className}`.trim()}>
+    <div role="region" aria-label={ariaLabel} className={`band-strip-root min-h-0 overflow-visible ${className}`.trim()}>
       <div
         ref={scrollElRef}
-        className="band-strip-scroll h-full min-h-0 overflow-x-auto overflow-y-hidden"
+        className="band-strip-scroll h-full min-h-0 overflow-x-auto overflow-y-visible"
         style={{
           containerType: 'size',
           backgroundColor: BAND_STRIP_SCROLLPORT_BG,
@@ -328,6 +328,7 @@ export const BandStrip = forwardRef<BandStripHandle, BandStripProps>(function Ba
                     height: '100%',
                     aspectRatio: `${BAND_TILE_VIEWBOX_W} / ${BAND_TILE_VIEWBOX_H}`,
                     width: 'auto',
+                    overflow: 'visible',
                     ...widthCapStyle,
                     ...overlapStyle,
                   } as CSSProperties
@@ -348,7 +349,7 @@ export const BandStrip = forwardRef<BandStripHandle, BandStripProps>(function Ba
                     clipPath: tileClipPath,
                     WebkitClipPath: tileClipPath,
                   }}
-                  className="group block size-full rounded-none border-0 bg-transparent p-0 outline-none ring-0 transition-transform duration-[200ms] ease-out hover:z-10 hover:scale-[1.03] focus-visible:ring-2 focus-visible:ring-purple-950"
+                  className="group block size-full rounded-none border-0 bg-transparent p-0 outline-none ring-0 transition-transform duration-[200ms] ease-out hover:z-10 hover:scale-[1.20] focus-visible:ring-2 focus-visible:ring-purple-950"
                 >
                   <BandTile
                     variant={variant}

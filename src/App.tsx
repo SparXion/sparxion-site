@@ -10,6 +10,7 @@ import { ContactPage } from './pages/ContactPage';
 import { PortfolioPage } from './pages/PortfolioPage';
 import { PortfolioProjectPage } from './pages/PortfolioProjectPage';
 import { SoftwarePage } from './pages/SoftwarePage';
+import { SoftwareProjectPage } from './pages/SoftwareProjectPage';
 import './App.css';
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
             <Route path="/portfolio" element={<PortfolioPage />} />
             <Route path="/portfolio/:id" element={<PortfolioProjectPage />} />
             <Route path="/software" element={<SoftwarePage />} />
+            <Route path="/software/:id" element={<SoftwareProjectPage />} />
             <Route path="/ethos" element={<EthosPage />} />
             <Route path="/ucid" element={<UCIDPage />} />
             <Route path="/ai-tuner" element={<AITunerPage />} />

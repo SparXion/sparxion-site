@@ -7,42 +7,12 @@ import {
 } from '../lib/landingSession';
 import { BandStrip, type BandStripHandle } from './BandStrip';
 import { BAND_TILE_VIEWBOX_H } from './BandTile';
+import { DESIGN_BAND_PROJECT_IDS } from '../data/designBandProjectIds';
 import { getPortfolioItemById } from '../data/portfolio';
 import { portfolioBandImageHref } from '../lib/portfolioBandImageHref';
-import { portfolioImageUrl } from '../lib/portfolioUrls';
 
-/** Top of hero wedge strip in Sparxion_Landing_Sketch-Scale.svg viewBox (`#hero-clip-band-left` top Y). */
+/** Top of hero wedge strip in landing hero viewBox 1920×1080 (`#hero-clip-band-left` top Y). */
 const HERO_WEDGE_TOP_FRAC_U = `${408.8} / 1080`;
-
-/** Curated order (left of Large X). `routeId` drives `/portfolio/:id` and `portfolio.ts` titles. */
-type DesignBandRow = {
-  reactKey: string;
-  routeId: string;
-  /** When set, `band.jpg` is read from this folder under `public/portfolio/` instead of `routeId`. */
-  bandSourceId?: string;
-};
-
-const DESIGN_BAND_ROWS: readonly DesignBandRow[] = [
-  { reactKey: 'custom-motors', routeId: 'custom-motors' },
-  { reactKey: 'twinduction', routeId: 'twinduction' },
-  { reactKey: 'hw-crashers', routeId: 'hw-crashers' },
-  { reactKey: 'hw-tri-n-stop-me', routeId: 'hw-tri-n-stop-me' },
-  { reactKey: 'hw-art', routeId: 'hw-art' },
-  { reactKey: 'nike-acg-cascade', routeId: 'nike-acg', bandSourceId: 'nike-cascade' },
-  { reactKey: 'nike-acg', routeId: 'nike-acg' },
-  { reactKey: 'eps-glitz', routeId: 'eps-glitz' },
-  { reactKey: 'nike-zion', routeId: 'nike-zion' },
-  { reactKey: 'paw-patrol', routeId: 'paw-patrol' },
-  { reactKey: 'gi-joe', routeId: 'gi-joe' },
-  { reactKey: 'valaverse', routeId: 'valaverse' },
-  { reactKey: 'power-rangers', routeId: 'power-rangers' },
-  { reactKey: 'star-wars', routeId: 'star-wars' },
-  { reactKey: 'marmot', routeId: 'marmot' },
-  { reactKey: 'mwls', routeId: 'mwls' },
-  { reactKey: 'naughty-connie', routeId: 'naughty-connie' },
-  { reactKey: 'concept-art', routeId: 'concept-art' },
-  { reactKey: 'drgn-fli', routeId: 'drgn-fli' },
-];
 
 export type DesignBandProps = {
   /** When true, overlay is interactive and opaque; otherwise hidden + inert */
@@ -129,16 +99,13 @@ export const DesignBand = forwardRef<BandStripHandle, DesignBandProps>(function 
 
   const stripItems = useMemo(
     () =>
-      DESIGN_BAND_ROWS.map((row) => {
-        const p = getPortfolioItemById(row.routeId);
-        const imageHref = row.bandSourceId
-          ? portfolioImageUrl(row.bandSourceId, 'band.jpg')
-          : portfolioBandImageHref(row.routeId);
+      DESIGN_BAND_PROJECT_IDS.map((id) => {
+        const p = getPortfolioItemById(id);
         return {
-          reactKey: row.reactKey,
-          projectId: row.routeId,
-          title: p?.title ?? row.routeId,
-          imageHref,
+          reactKey: id,
+          projectId: id,
+          title: p?.title ?? id,
+          imageHref: portfolioBandImageHref(id),
         };
       }),
     [],
@@ -167,7 +134,6 @@ export const DesignBand = forwardRef<BandStripHandle, DesignBandProps>(function 
         .filter(Boolean)
         .join(' ')}
       style={{
-        // Keep the container pinned left; use a px-based clip-path so angles don't distort.
         width: '100%',
         transform: 'none',
         top: `calc(100% * (${HERO_WEDGE_TOP_FRAC_U}))`,

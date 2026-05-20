@@ -14,6 +14,9 @@ public/portfolio/*
 
 # Quarantined legacy / staging (moved out of active tree)
 QUARANTINE/
+Recovered Files/
+Cursor Refund/
+public 2/
 
 # Optional local “Portfolio” folder copy at repo root (anchor so it does not match public/portfolio/)
 /Portfolio/
@@ -37,5 +40,3 @@ __pycache__/
 src/assets/brand/sparxion-graphics/PNG Sketch Files/
 src/assets/brand/sparxion-graphics/Sparxion Band Images/
 src/assets/brand/sparxion-graphics/Sparxion Business Cards/
-Cursor Refund/
-Recovered Files/
