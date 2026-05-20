@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useNavigationType, NavigationType } from 'react-router-dom';
-import landingSvgRaw from '../assets/brand/sparxion-graphics/Illustrator Sketch Files/Sparxion_Landing_Sketch-Scale.svg?raw';
 import xMarkLargeSvg from '../assets/brand/sparxion-graphics/graphics-svg/x-mark-large.svg?raw';
+import { buildLandingHeroSvg } from '../lib/buildLandingHeroSvg';
 import {
   clearLandingSession,
   consumeLandingPendingDesignTileNav,
@@ -82,6 +82,28 @@ function deriveHeroWheelState(
 /** Mirrors prior 0.57 → 0.62 “pop”, applied to the wordmark-scale `#x-mark` instead. */
 const SMALL_X_HOVER_SCALE = 0.62 / 0.57;
 
+/** Idle double-pulse: two beats 0.25s apart (heartbeat), then pause 2s. Peak ~1.14. */
+const SMALL_X_PULSE_INTERVAL_S = 0.25;
+const SMALL_X_PULSE_PAUSE_S = 2;
+/** One full beat: smooth ramp up + down (still fast, not a snap). */
+const SMALL_X_PULSE_BEAT_S = 0.22;
+const SMALL_X_PULSE_HALF_BEAT_S = SMALL_X_PULSE_BEAT_S / 2;
+const SMALL_X_PULSE_CYCLE_S =
+  SMALL_X_PULSE_INTERVAL_S + SMALL_X_PULSE_BEAT_S + SMALL_X_PULSE_PAUSE_S;
+const SMALL_X_PULSE_SCALE = 1.14;
+
+const pulseKeyframePct = (t: number): number => (t / SMALL_X_PULSE_CYCLE_S) * 100;
+
+const SMALL_X_PULSE_BEAT1_PEAK_PCT = pulseKeyframePct(SMALL_X_PULSE_HALF_BEAT_S);
+const SMALL_X_PULSE_BEAT1_END_PCT = pulseKeyframePct(SMALL_X_PULSE_BEAT_S);
+const SMALL_X_PULSE_BEAT2_PEAK_PCT = pulseKeyframePct(
+  SMALL_X_PULSE_INTERVAL_S + SMALL_X_PULSE_HALF_BEAT_S,
+);
+const SMALL_X_PULSE_BEAT2_END_PCT = pulseKeyframePct(
+  SMALL_X_PULSE_INTERVAL_S + SMALL_X_PULSE_BEAT_S,
+);
+const SMALL_X_PULSE_BEAT2_START_PCT = pulseKeyframePct(SMALL_X_PULSE_INTERVAL_S);
+
 /** Drives `#x-mark-large` grow duration (see animation in `heroCss`) + band overlay reveal delay. */
 const LANDING_LARGE_X_GROW_MS = 800;
 
@@ -145,33 +167,67 @@ const heroCss = `
   transform: scale(1.03);
 }
 
-/* Wordmark fades out on expand */
-.landing-hero-css-root svg #wordmark {
+/* Wordmark + tagline fade out on expand */
+.landing-hero-css-root svg #wordmark,
+.landing-hero-css-root svg #tagline {
   opacity: 1;
   transition: opacity 400ms ease;
   pointer-events: none;
 }
 
-.landing-hero-css-root--expanded svg #wordmark {
+.landing-hero-css-root--expanded svg #wordmark,
+.landing-hero-css-root--expanded svg #tagline {
   opacity: 0;
 }
 
-/* Wordmark-scale X — visible idle + hover micro-pop (same hinge as Illustrator bbox center) */
-.landing-hero-css-root svg #x-mark {
+@keyframes landing-x-mark-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  ${SMALL_X_PULSE_BEAT1_PEAK_PCT}% {
+    transform: scale(${SMALL_X_PULSE_SCALE});
+  }
+  ${SMALL_X_PULSE_BEAT1_END_PCT}% {
+    transform: scale(1);
+  }
+  ${SMALL_X_PULSE_BEAT2_START_PCT}% {
+    transform: scale(1);
+  }
+  ${SMALL_X_PULSE_BEAT2_PEAK_PCT}% {
+    transform: scale(${SMALL_X_PULSE_SCALE});
+  }
+  ${SMALL_X_PULSE_BEAT2_END_PCT}% {
+    transform: scale(1);
+  }
+}
+
+/* Wordmark-scale X — idle double-pulse, hover micro-pop (same hinge as Illustrator bbox center) */
+.landing-hero-css-root:not(.landing-hero-css-root--expanded) svg #x-mark {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
   cursor: pointer;
   transform: scale(1);
   transform-origin: calc(var(--landing-x-sx, 971) * 1px) calc(var(--landing-x-sy, 540) * 1px);
-  transition: transform 200ms ease, opacity 400ms ease;
+  animation: landing-x-mark-pulse ${SMALL_X_PULSE_CYCLE_S}s cubic-bezier(0.45, 0.05, 0.55, 0.95)
+    infinite;
+  transition: opacity 400ms ease;
 }
 
 .landing-hero-css-root--x-hover:not(.landing-hero-css-root--expanded) svg #x-mark {
+  animation-play-state: paused;
   transform: scale(${SMALL_X_HOVER_SCALE});
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .landing-hero-css-root:not(.landing-hero-css-root--expanded) svg #x-mark {
+    animation: none;
+  }
+}
+
 .landing-hero-css-root--expanded svg #x-mark {
+  animation: none;
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
@@ -313,6 +369,8 @@ export function LandingHero({ useUnifiedBand = false }: LandingHeroProps) {
     if (seamPx === null) return maxRevealPx / 2;
     return Math.min(maxRevealPx, Math.max(0, seamPx));
   }, [seamPx, maxRevealPx]);
+
+  const landingHeroSvg = useMemo(() => buildLandingHeroSvg(), []);
 
   useLayoutEffect(() => {
     if (navigationType === NavigationType.Push || navigationType === NavigationType.Replace) {
@@ -697,6 +755,13 @@ export function LandingHero({ useUnifiedBand = false }: LandingHeroProps) {
     setBandRightHover(false);
   }, []);
 
+  /** Tile buttons handle their own navigation; only non-tile band clicks go to the grid. */
+  const isSoftwareBandTileTarget = (el: Element | null): boolean =>
+    !!(
+      el?.closest('[data-unified-tile] button') ||
+      el?.closest('[data-band-tile-index] button')
+    );
+
   const handleClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
       const el = e.target as Element | null;
@@ -711,6 +776,7 @@ export function LandingHero({ useUnifiedBand = false }: LandingHeroProps) {
         el?.closest('.landing-software-band-shell') ||
         el?.closest('.landing-unified-band-root')
       ) {
+        if (isSoftwareBandTileTarget(el)) return;
         navigate('/software');
       }
     },
@@ -734,6 +800,7 @@ export function LandingHero({ useUnifiedBand = false }: LandingHeroProps) {
       ) {
         return;
       }
+      if (isSoftwareBandTileTarget(target)) return;
       e.preventDefault();
       navigate('/software');
     },
@@ -787,7 +854,7 @@ export function LandingHero({ useUnifiedBand = false }: LandingHeroProps) {
         onClick={handleClick}
         onKeyDown={handleKeyDown}
       >
-        <div dangerouslySetInnerHTML={{ __html: landingSvgRaw }} />
+        <div dangerouslySetInnerHTML={{ __html: landingHeroSvg }} />
         {useUnifiedBand && designBandVisible ? (
           <div
             className="landing-unified-band-root pointer-events-auto absolute left-0 z-[22] w-full transition-opacity duration-300"

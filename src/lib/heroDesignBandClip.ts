@@ -1,5 +1,5 @@
 /**
- * Matches `#hero-clip-band-left` on Sparxion_Landing_Sketch-Scale.svg (viewBox 0 0 1920 × 1080).
+ * Matches `#hero-clip-band-left` on composed landing hero (viewBox 0 0 1920 × 1080).
  * Percents assume the clipped element is laid out as the illustrator **left half** (960 user units wide)
  * and **only** the wedge vertical band `[HERO_CLIP_TOP_Y, HERO_CLIP_BOTTOM_Y]`.
  */

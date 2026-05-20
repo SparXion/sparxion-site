@@ -26,7 +26,7 @@ const useUnifiedBand =
 `src/components/LandingHero.tsx`
 
 ```tsx
-import landingSvgRaw from '../assets/brand/sparxion-graphics/Sparxion_Landing_Sketch-Scale.svg?raw';
+import { buildLandingHeroSvg } from '../lib/buildLandingHeroSvg';
 // …
 /**
  * TEMP: disable hero SVG `#hero-band-right` clipping entirely (no static wedge, no motion-linked polygon).
@@ -209,7 +209,7 @@ const apply = (): void => {
     .filter(Boolean)
     .join(' ')}
 >
-  <div dangerouslySetInnerHTML={{ __html: landingSvgRaw }} />
+  <div dangerouslySetInnerHTML={{ __html: buildLandingHeroSvg() }} />
   {useUnifiedBand && designBandVisible ? (
     <UnifiedBandShell seamPx={seamResolved} maxRevealPx={maxRevealPx} rightSeamPx={rightSeamPx}>
       <UnifiedBandStrip />
@@ -494,7 +494,7 @@ Outer scroll / overflow:
 
 ## 13. Inline landing sketch asset (large X paths live here)
 
-Path: `src/assets/brand/sparxion-graphics/Sparxion_Landing_Sketch-Scale.svg`  
+Composed layers: `src/lib/buildLandingHeroSvg.ts` + `src/assets/brand/sparxion-graphics/graphics-svg/*.svg` (monolith archived under `archive/2026-0520-monolith-landing-sketch/`)  
 Imported in `LandingHero.tsx` as `?raw` and injected next to the React overlays.
 
 Excerpt (IDs `#x-mark`, `#x-mark-large`; viewBox `0 0 1920 1080`):
@@ -526,5 +526,5 @@ Excerpt (IDs `#x-mark`, `#x-mark-large`; viewBox `0 0 1920 1080`):
 | Right wedge constants + builders | `src/lib/heroSoftwareBandClip.ts` |
 | Left wedge polygon | `src/lib/heroDesignBandClip.ts` |
 | Software tile URLs | `src/lib/softwareUrls.ts` |
-| Landing sketch | `src/assets/brand/sparxion-graphics/Sparxion_Landing_Sketch-Scale.svg` |
+| Landing hero layers | `src/assets/brand/sparxion-graphics/graphics-svg/` |
 | UCID raster (example) | `public/software/ucid/band.jpg` |
