@@ -1,5 +1,6 @@
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { getPortfolioItemById } from '../data/portfolio';
+import { portfolioBandImageHref } from '../lib/portfolioBandImageHref';
 import { portfolioImageUrl } from '../lib/portfolioUrls';
 
 export function PortfolioProjectPage() {
@@ -18,6 +19,7 @@ export function PortfolioProjectPage() {
     );
   }
 
+  const bandSrc = portfolioBandImageHref(item.id);
   const videoSrc = item.videoFile
     ? portfolioImageUrl(item.id, item.videoFile)
     : null;
@@ -36,6 +38,14 @@ export function PortfolioProjectPage() {
         >
           ← Back
         </button>
+
+        <div className="mb-large rounded-card overflow-hidden border border-border-gray">
+          <img
+            src={bandSrc}
+            alt=""
+            className="w-full aspect-[1440/296] object-cover object-center"
+          />
+        </div>
 
         <header className="mb-large">
           <h1 className="text-h1 text-black mb-small">{item.title}</h1>

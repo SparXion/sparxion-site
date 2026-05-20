@@ -4,7 +4,7 @@ import {
   softwareStatusLabels,
   type PublicationStatus,
 } from '../data/software';
-import { softwareImageUrl } from '../lib/softwareUrls';
+import { softwareBandImageHref } from '../lib/softwareBandImageHref';
 
 function statusBadgeClass(status: PublicationStatus): string {
   switch (status) {
@@ -50,7 +50,7 @@ export function SoftwareProjectPage() {
   }
 
   const launchUrl = primaryUrl(item);
-  const bandSrc = softwareImageUrl(item.id, 'band.jpg');
+  const bandSrc = softwareBandImageHref(item.id);
 
   return (
     <div className="min-h-screen">
@@ -71,7 +71,7 @@ export function SoftwareProjectPage() {
           <img
             src={bandSrc}
             alt=""
-            className="w-full aspect-[16/10] object-cover"
+            className="w-full aspect-[1440/296] object-cover object-center"
           />
         </div>
 
