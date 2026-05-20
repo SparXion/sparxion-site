@@ -1,20 +1,18 @@
 import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   getSoftwareByCategorySorted,
   softwareFilterCategories,
   softwareItems,
   softwareStatusLabels,
 } from '../data/software';
-import type { PublicationStatus, SoftwareCategory, SoftwareItem } from '../data/software';
+import type { PublicationStatus, SoftwareCategory } from '../data/software';
+import { softwareBandImageHref } from '../lib/softwareBandImageHref';
 
 const visibleFilterTabs = softwareFilterCategories.filter(
   (tab) =>
     tab.id === 'all' || softwareItems.some((s) => s.categories.includes(tab.id)),
 );
-
-function primaryUrl(item: SoftwareItem): string | undefined {
-  return item.liveUrl ?? item.storeUrl ?? item.githubUrl;
-}
 
 function statusBadgeClass(status: PublicationStatus): string {
   switch (status) {
@@ -63,75 +61,66 @@ export function SoftwareGrid() {
       ) : (
         <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-large list-none p-0 m-0">
           {items.map((item) => {
-            const href = primaryUrl(item);
             const muted = item.status === 'internal' || item.status === 'nascent';
-            const cardShell = `group block rounded-card overflow-hidden border transition-standard ${
-              muted
-                ? 'border-dashed border-border-gray bg-very-light-gray/80 opacity-[0.82] saturate-[0.65]'
-                : 'border-border-gray bg-white hover:shadow-medium'
-            } ${href ? 'cursor-pointer' : 'cursor-default'}`;
-
-            const inner = (
-              <>
-                <div
-                  className={`aspect-[16/10] flex flex-col justify-between p-medium ${
-                    muted
-                      ? 'bg-gradient-to-br from-bg-gray to-border-gray/40'
-                      : 'bg-gradient-to-br from-very-light-gray to-bg-gray'
-                  }`}
-                >
-                  <div className="flex flex-wrap items-center gap-tiny">
-                    <span
-                      className={`inline-flex text-tiny font-medium px-small py-tiny rounded-subtle border ${statusBadgeClass(item.status)}`}
-                    >
-                      {softwareStatusLabels[item.status]}
-                    </span>
-                    {item.featured ? (
-                      <span className="inline-flex text-tiny font-medium px-small py-tiny rounded-subtle border border-black bg-black text-white">
-                        Featured
-                      </span>
-                    ) : null}
-                    {item.monetized ? (
-                      <span className="inline-flex text-tiny font-medium px-small py-tiny rounded-subtle border border-border-gray bg-white text-dark-gray">
-                        Monetized
-                      </span>
-                    ) : null}
-                  </div>
-                  <p
-                    className={`text-h3 font-medium line-clamp-2 ${muted ? 'text-medium-gray' : 'text-black'}`}
-                  >
-                    {item.title}
-                  </p>
-                </div>
-                <div className={`p-medium ${muted ? 'text-medium-gray' : ''}`}>
-                  <p className="text-small text-medium-gray mb-small">{item.subtitle}</p>
-                  <p className={`text-body line-clamp-2 ${muted ? 'text-medium-gray' : 'text-dark-gray'}`}>
-                    {item.tagline}
-                  </p>
-                  {item.stack.length > 0 ? (
-                    <p className="text-tiny text-light-gray mt-small line-clamp-1">
-                      {item.stack.slice(0, 4).join(' · ')}
-                      {item.stack.length > 4 ? '…' : ''}
-                    </p>
-                  ) : null}
-                </div>
-              </>
-            );
+            const thumbSrc = softwareBandImageHref(item.id);
 
             return (
               <li key={item.id}>
-                {href ? (
-                  <a
-                    href={href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`${cardShell} no-underline text-inherit`}
-                  >
-                    {inner}
-                  </a>
-                ) : (
-                  <div className={cardShell}>{inner}</div>
-                )}
+                <Link
+                  to={`/software/${item.id}`}
+                  className={`group block no-underline text-inherit rounded-card overflow-hidden border transition-standard ${
+                    muted
+                      ? 'border-dashed border-border-gray bg-very-light-gray/80 opacity-[0.82] saturate-[0.65] hover:opacity-100 hover:saturate-100'
+                      : 'border-border-gray bg-white hover:shadow-medium'
+                  }`}
+                >
+                  <div className="aspect-[16/10] overflow-hidden bg-bg-gray">
+                    <img
+                      src={thumbSrc}
+                      alt={item.title}
+                      className={`w-full h-full object-cover transition-[filter] duration-300 ease-out ${
+                        muted ? 'opacity-90' : 'grayscale group-hover:grayscale-0'
+                      }`}
+                      loading="lazy"
+                    />
+                  </div>
+                  <div className={`p-medium ${muted ? 'text-medium-gray' : ''}`}>
+                    <div className="flex flex-wrap items-center gap-tiny mb-small">
+                      <span
+                        className={`inline-flex text-tiny font-medium px-small py-tiny rounded-subtle border ${statusBadgeClass(item.status)}`}
+                      >
+                        {softwareStatusLabels[item.status]}
+                      </span>
+                      {item.featured ? (
+                        <span className="inline-flex text-tiny font-medium px-small py-tiny rounded-subtle border border-black bg-black text-white">
+                          Featured
+                        </span>
+                      ) : null}
+                      {item.monetized ? (
+                        <span className="inline-flex text-tiny font-medium px-small py-tiny rounded-subtle border border-border-gray bg-white text-dark-gray">
+                          Monetized
+                        </span>
+                      ) : null}
+                    </div>
+                    <h2
+                      className={`text-h3 mb-tiny ${muted ? 'text-medium-gray' : 'text-black'}`}
+                    >
+                      {item.title}
+                    </h2>
+                    <p className="text-small text-medium-gray mb-tiny">{item.subtitle}</p>
+                    <p
+                      className={`text-body line-clamp-2 ${muted ? 'text-medium-gray' : 'text-dark-gray'}`}
+                    >
+                      {item.tagline}
+                    </p>
+                    {item.stack.length > 0 ? (
+                      <p className="text-tiny text-light-gray mt-small line-clamp-1">
+                        {item.stack.slice(0, 4).join(' · ')}
+                        {item.stack.length > 4 ? '…' : ''}
+                      </p>
+                    ) : null}
+                  </div>
+                </Link>
               </li>
             );
           })}

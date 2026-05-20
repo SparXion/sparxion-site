@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 # Copies masters from Portfolio/02-MASTERS/<project-id>/images/
-# into public/software/<project-id>/ (URLs used by softwareImageUrl / software band band.jpg).
+# into public/software-assets/<project-id>/ (URLs used by softwareImageUrl).
 #
 # Project folder names must match software item `id` in src/data/software.ts
-# (e.g. ucid → public/software/ucid/band.jpg).
+# (e.g. ucid → public/software-assets/ucid/band.jpg).
 
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 MASTERS="${SOFTWARE_MASTERS:-$ROOT/Portfolio/02-MASTERS}"
-DEST="$ROOT/public/software"
+DEST="$ROOT/public/software-assets"
 
 if [[ ! -d "$MASTERS" ]]; then
   echo "Software masters not found: $MASTERS" >&2
