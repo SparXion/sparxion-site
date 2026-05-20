@@ -1,8 +1,9 @@
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { getPortfolioItemById } from '../data/portfolio';
 import { portfolioImageUrl } from '../lib/portfolioUrls';
 
 export function PortfolioProjectPage() {
+  const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const item = id ? getPortfolioItemById(id) : undefined;
 
@@ -24,12 +25,17 @@ export function PortfolioProjectPage() {
   return (
     <div className="min-h-screen">
       <div className="max-w-[900px] mx-auto px-medium py-large">
-        <Link
-          to="/portfolio"
-          className="inline-block text-small text-medium-gray hover:text-black mb-medium transition-standard"
+        <button
+          type="button"
+          onClick={() => {
+            // If we came from the band, go back to home (band restores via session)
+            // Otherwise go to the portfolio grid
+            navigate(-1);
+          }}
+          className="inline-block text-small text-medium-gray hover:text-black mb-medium transition-standard bg-transparent border-0 p-0 cursor-pointer"
         >
-          ← Portfolio
-        </Link>
+          ← Back
+        </button>
 
         <header className="mb-large">
           <h1 className="text-h1 text-black mb-small">{item.title}</h1>

@@ -2,6 +2,10 @@ import { forwardRef, useImperativeHandle, useLayoutEffect, useMemo, useRef } fro
 import { useNavigate } from 'react-router-dom';
 import { softwareItems } from '../data/software';
 import { buildHeroSoftwareBandClipPathPx } from '../lib/heroSoftwareBandClip';
+import {
+  writeLandingBandScrollPersisted,
+  writeLandingPendingSoftwareTileNav,
+} from '../lib/landingSession';
 import { softwareImageUrl } from '../lib/softwareUrls';
 import { BandStrip, type BandStripHandle } from './BandStrip';
 import { BAND_TILE_VIEWBOX_H } from './BandTile';
@@ -144,9 +148,11 @@ export const SoftwareBandV2 = forwardRef<BandStripHandle, SoftwareBandV2Props>(f
           ref={stripRef}
           items={stripItems}
           initialScrollLeft={0}
-          onSelectProject={(projectId) =>
-            navigate(`/software/${encodeURIComponent(projectId)}`)
-          }
+          onSelectProject={(projectId) => {
+            writeLandingPendingSoftwareTileNav();
+            writeLandingBandScrollPersisted(stripRef.current?.getScrollLeft() ?? 0);
+            navigate(`/software/${encodeURIComponent(projectId)}`);
+          }}
           tileAriaLabelPrefix="Open software"
           ariaLabel="Software portfolio band"
           className="h-full min-h-0 min-w-0 flex-1"

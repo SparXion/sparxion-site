@@ -5,6 +5,7 @@ import { buildLandingHeroSvg } from '../lib/buildLandingHeroSvg';
 import {
   clearLandingSession,
   consumeLandingPendingDesignTileNav,
+  consumeLandingPendingSoftwareTileNav,
   readLandingBandScrollPersisted,
   readLandingExpandedPersisted,
   writeLandingBandScrollPersisted,
@@ -378,7 +379,9 @@ export function LandingHero({ useUnifiedBand = false }: LandingHeroProps) {
       return;
     }
     if (navigationType !== NavigationType.Pop) return;
-    if (!consumeLandingPendingDesignTileNav()) return;
+    const fromDesign = consumeLandingPendingDesignTileNav();
+    const fromSoftware = consumeLandingPendingSoftwareTileNav();
+    if (!fromDesign && !fromSoftware) return;
     if (!readLandingExpandedPersisted()) return;
     setExpanded(true);
     setLandingRestored(true);

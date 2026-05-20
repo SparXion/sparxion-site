@@ -10,12 +10,14 @@ export const LANDING_SESSION_EXPANDED_KEY = 'sparxion:landing:heroExpanded';
 export const LANDING_SESSION_BAND_SCROLL_KEY = 'sparxion:landing:designBandScroll';
 /** Set immediately before programmatic navigation to `/portfolio/:id` from the design band; consumed on POP to `/`. */
 export const LANDING_SESSION_PENDING_DESIGN_TILE_NAV_KEY = 'sparxion:landing:pendingDesignTileNav';
+export const LANDING_SESSION_PENDING_SOFTWARE_TILE_NAV_KEY = 'sparxion:landing:pendingSoftwareTileNav';
 
 export function clearLandingSession(): void {
   try {
     sessionStorage.removeItem(LANDING_SESSION_EXPANDED_KEY);
     sessionStorage.removeItem(LANDING_SESSION_BAND_SCROLL_KEY);
     sessionStorage.removeItem(LANDING_SESSION_PENDING_DESIGN_TILE_NAV_KEY);
+    sessionStorage.removeItem(LANDING_SESSION_PENDING_SOFTWARE_TILE_NAV_KEY);
   } catch {
     /* private mode etc. */
   }
@@ -69,6 +71,25 @@ export function writeLandingPendingDesignTileNav(): void {
 export function consumeLandingPendingDesignTileNav(): boolean {
   try {
     const key = LANDING_SESSION_PENDING_DESIGN_TILE_NAV_KEY;
+    const ok = sessionStorage.getItem(key) === '1';
+    sessionStorage.removeItem(key);
+    return ok;
+  } catch {
+    return false;
+  }
+}
+
+export function writeLandingPendingSoftwareTileNav(): void {
+  try {
+    sessionStorage.setItem(LANDING_SESSION_PENDING_SOFTWARE_TILE_NAV_KEY, '1');
+  } catch {
+    /* ignore */
+  }
+}
+
+export function consumeLandingPendingSoftwareTileNav(): boolean {
+  try {
+    const key = LANDING_SESSION_PENDING_SOFTWARE_TILE_NAV_KEY;
     const ok = sessionStorage.getItem(key) === '1';
     sessionStorage.removeItem(key);
     return ok;
