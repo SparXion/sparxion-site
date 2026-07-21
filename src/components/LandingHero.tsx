@@ -84,34 +84,6 @@ function deriveHeroWheelState(
 /** Mirrors prior 0.57 → 0.62 “pop”, applied to the wordmark-scale `#x-mark` instead. */
 const SMALL_X_HOVER_SCALE = 0.62 / 0.57;
 
-/** Idle double-pulse: two beats 0.25s apart (heartbeat), then pause 2s. Peak ~1.14. */
-const SMALL_X_PULSE_INTERVAL_S = 0.25;
-const SMALL_X_PULSE_PAUSE_S = 2;
-/** One full beat: smooth ramp up + down (still fast, not a snap). */
-const SMALL_X_PULSE_BEAT_S = 0.22;
-const SMALL_X_PULSE_HALF_BEAT_S = SMALL_X_PULSE_BEAT_S / 2;
-const SMALL_X_PULSE_CYCLE_S =
-  SMALL_X_PULSE_INTERVAL_S + SMALL_X_PULSE_BEAT_S + SMALL_X_PULSE_PAUSE_S;
-const SMALL_X_PULSE_SCALE = 1.14;
-
-/** Idle hint: after this many full pulse cycles while in view, show “Press the X…”. */
-const X_HINT_AFTER_PULSE_CYCLES = 5;
-const X_HINT_FADE_AWAY_MS = 8000;
-const X_HINT_REDUCED_MOTION_DELAY_MS = 8000;
-const X_HINT_SESSION_KEY = 'sparxion:landing:x-press-hint';
-
-const pulseKeyframePct = (t: number): number => (t / SMALL_X_PULSE_CYCLE_S) * 100;
-
-const SMALL_X_PULSE_BEAT1_PEAK_PCT = pulseKeyframePct(SMALL_X_PULSE_HALF_BEAT_S);
-const SMALL_X_PULSE_BEAT1_END_PCT = pulseKeyframePct(SMALL_X_PULSE_BEAT_S);
-const SMALL_X_PULSE_BEAT2_PEAK_PCT = pulseKeyframePct(
-  SMALL_X_PULSE_INTERVAL_S + SMALL_X_PULSE_HALF_BEAT_S,
-);
-const SMALL_X_PULSE_BEAT2_END_PCT = pulseKeyframePct(
-  SMALL_X_PULSE_INTERVAL_S + SMALL_X_PULSE_BEAT_S,
-);
-const SMALL_X_PULSE_BEAT2_START_PCT = pulseKeyframePct(SMALL_X_PULSE_INTERVAL_S);
-
 /** Drives `#x-mark-large` grow duration (see animation in `heroCss`) + band overlay reveal delay. */
 const LANDING_LARGE_X_GROW_MS = 800;
 
@@ -188,29 +160,7 @@ const heroCss = `
   opacity: 0;
 }
 
-@keyframes landing-x-mark-pulse {
-  0%,
-  100% {
-    transform: scale(1);
-  }
-  ${SMALL_X_PULSE_BEAT1_PEAK_PCT}% {
-    transform: scale(${SMALL_X_PULSE_SCALE});
-  }
-  ${SMALL_X_PULSE_BEAT1_END_PCT}% {
-    transform: scale(1);
-  }
-  ${SMALL_X_PULSE_BEAT2_START_PCT}% {
-    transform: scale(1);
-  }
-  ${SMALL_X_PULSE_BEAT2_PEAK_PCT}% {
-    transform: scale(${SMALL_X_PULSE_SCALE});
-  }
-  ${SMALL_X_PULSE_BEAT2_END_PCT}% {
-    transform: scale(1);
-  }
-}
-
-/* Wordmark-scale X — idle double-pulse, hover micro-pop (same hinge as Illustrator bbox center) */
+/* Wordmark-scale X — static, hover micro-pop (same hinge as Illustrator bbox center) */
 .landing-hero-css-root:not(.landing-hero-css-root--expanded) svg #x-mark {
   opacity: 1;
   visibility: visible;
@@ -218,24 +168,20 @@ const heroCss = `
   cursor: pointer;
   transform: scale(1);
   transform-origin: calc(var(--landing-x-sx, 971) * 1px) calc(var(--landing-x-sy, 540) * 1px);
-  animation: landing-x-mark-pulse ${SMALL_X_PULSE_CYCLE_S}s cubic-bezier(0.45, 0.05, 0.55, 0.95)
-    infinite;
-  transition: opacity 400ms ease;
+  transition: opacity 400ms ease, transform 200ms ease;
 }
 
 .landing-hero-css-root--x-hover:not(.landing-hero-css-root--expanded) svg #x-mark {
-  animation-play-state: paused;
   transform: scale(${SMALL_X_HOVER_SCALE});
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .landing-hero-css-root:not(.landing-hero-css-root--expanded) svg #x-mark {
-    animation: none;
+  .landing-hero-css-root--x-hover:not(.landing-hero-css-root--expanded) svg #x-mark {
+    transform: scale(1);
   }
 }
 
 .landing-hero-css-root--expanded svg #x-mark {
-  animation: none;
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
@@ -337,68 +283,7 @@ const heroCss = `
   opacity: 0 !important;
   pointer-events: none !important;
 }
-
-/* Idle “Press the X” hint — after several pulse cycles */
-.landing-x-press-hint {
-  position: absolute;
-  left: 50%;
-  bottom: 5.5%;
-  z-index: 40;
-  transform: translateX(-50%) translateY(8px);
-  margin: 0;
-  padding: 0.35rem 0.25rem;
-  border: none;
-  background: transparent;
-  font-family: 'Figtree', sans-serif;
-  font-size: clamp(0.9rem, 1.6vw, 1.05rem);
-  font-weight: 500;
-  letter-spacing: 0.01em;
-  color: #1a1224;
-  cursor: pointer;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 420ms ease, transform 420ms ease;
-}
-
-.landing-hero-css-root--x-hint-visible:not(.landing-hero-css-root--expanded) .landing-x-press-hint {
-  opacity: 0.88;
-  pointer-events: auto;
-  transform: translateX(-50%) translateY(0);
-}
-
-.landing-hero-css-root--x-hint-visible:not(.landing-hero-css-root--expanded) .landing-x-press-hint:hover,
-.landing-hero-css-root--x-hint-visible:not(.landing-hero-css-root--expanded) .landing-x-press-hint:focus-visible {
-  opacity: 1;
-  outline: none;
-}
-
-.landing-hero-css-root--expanded .landing-x-press-hint {
-  opacity: 0;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .landing-x-press-hint {
-    transition: opacity 200ms ease;
-  }
-}
 `;
-
-function readXHintSessionDismissed(): boolean {
-  try {
-    return sessionStorage.getItem(X_HINT_SESSION_KEY) === '1';
-  } catch {
-    return false;
-  }
-}
-
-function writeXHintSessionDismissed(): void {
-  try {
-    sessionStorage.setItem(X_HINT_SESSION_KEY, '1');
-  } catch {
-    /* ignore quota / private mode */
-  }
-}
 
 function measureXBboxes(root: HTMLElement): void {
   const svg = root.querySelector('svg');
@@ -463,7 +348,6 @@ export function LandingHero({ useUnifiedBand = false }: LandingHeroProps) {
   const [xHover, setXHover] = useState(false);
   const [bandRightHover, setBandRightHover] = useState(false);
   const [bandsRevealed, setBandsRevealed] = useState(false);
-  const [xHintVisible, setXHintVisible] = useState(false);
   const designBandVisible = expanded && bandsRevealed;
   const softwareBandVisible = expanded && bandsRevealed;
   const hostRef = useRef<HTMLDivElement>(null);
@@ -476,128 +360,9 @@ export function LandingHero({ useUnifiedBand = false }: LandingHeroProps) {
   const maxRevealPxRef = useRef(maxRevealPx);
   const [xSeamPx, setXSeamPx] = useState<number | undefined>(undefined);
   const [rightSeamPx, setRightSeamPx] = useState<number | undefined>(undefined);
-  const pulseCycleCountRef = useRef(0);
-  const heroInViewRef = useRef(false);
-  const xHintShownRef = useRef(readXHintSessionDismissed());
-  const xHintFadeTimerRef = useRef<number | null>(null);
-
-  const dismissXHint = useCallback((persistSession: boolean) => {
-    setXHintVisible(false);
-    if (xHintFadeTimerRef.current != null) {
-      window.clearTimeout(xHintFadeTimerRef.current);
-      xHintFadeTimerRef.current = null;
-    }
-    if (persistSession) {
-      xHintShownRef.current = true;
-      writeXHintSessionDismissed();
-    }
-  }, []);
-
-  const revealXHint = useCallback(() => {
-    if (xHintShownRef.current) return;
-    setXHintVisible(true);
-    xHintShownRef.current = true;
-    writeXHintSessionDismissed();
-    if (xHintFadeTimerRef.current != null) {
-      window.clearTimeout(xHintFadeTimerRef.current);
-    }
-    xHintFadeTimerRef.current = window.setTimeout(() => {
-      setXHintVisible(false);
-      xHintFadeTimerRef.current = null;
-    }, X_HINT_FADE_AWAY_MS);
-  }, []);
 
   const expandFromX = useCallback(() => {
-    dismissXHint(true);
     setExpanded(true);
-  }, [dismissXHint]);
-
-  /** Count idle pulses (or timed delay for reduced motion) while the band hero is on-screen. */
-  useEffect(() => {
-    const root = hostRef.current;
-    if (!root || expanded || xHintShownRef.current) return;
-
-    const reduceMotion =
-      typeof window !== 'undefined' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-    let timer: number | null = null;
-    const clearTimer = () => {
-      if (timer != null) {
-        window.clearTimeout(timer);
-        timer = null;
-      }
-    };
-
-    const armReducedMotionHint = () => {
-      clearTimer();
-      if (!heroInViewRef.current || xHintShownRef.current) return;
-      timer = window.setTimeout(() => {
-        if (!heroInViewRef.current || xHintShownRef.current) return;
-        revealXHint();
-      }, X_HINT_REDUCED_MOTION_DELAY_MS);
-    };
-
-    const io = new IntersectionObserver(
-      ([entry]) => {
-        heroInViewRef.current = entry.isIntersecting && entry.intersectionRatio >= 0.35;
-        if (!heroInViewRef.current) {
-          pulseCycleCountRef.current = 0;
-          clearTimer();
-          return;
-        }
-        if (reduceMotion) armReducedMotionHint();
-      },
-      { threshold: [0, 0.35, 0.6] },
-    );
-    io.observe(root);
-
-    if (reduceMotion) {
-      const resetOnMove = () => {
-        if (xHintShownRef.current) return;
-        armReducedMotionHint();
-      };
-      root.addEventListener('pointermove', resetOnMove);
-      return () => {
-        io.disconnect();
-        root.removeEventListener('pointermove', resetOnMove);
-        clearTimer();
-      };
-    }
-
-    const xMark = root.querySelector('#x-mark');
-    if (!xMark) {
-      io.disconnect();
-      return;
-    }
-
-    const onPulseCycle = () => {
-      if (!heroInViewRef.current || xHintShownRef.current) return;
-      pulseCycleCountRef.current += 1;
-      if (pulseCycleCountRef.current >= X_HINT_AFTER_PULSE_CYCLES) {
-        revealXHint();
-      }
-    };
-
-    xMark.addEventListener('animationiteration', onPulseCycle);
-    return () => {
-      io.disconnect();
-      xMark.removeEventListener('animationiteration', onPulseCycle);
-    };
-  }, [expanded, revealXHint]);
-
-  useEffect(() => {
-    if (expanded) {
-      dismissXHint(true);
-    }
-  }, [expanded, dismissXHint]);
-
-  useEffect(() => {
-    return () => {
-      if (xHintFadeTimerRef.current != null) {
-        window.clearTimeout(xHintFadeTimerRef.current);
-      }
-    };
   }, []);
 
   useLayoutEffect(() => {
@@ -935,11 +700,7 @@ export function LandingHero({ useUnifiedBand = false }: LandingHeroProps) {
     (e: React.PointerEvent<HTMLDivElement>) => {
       const el = e.target as Element | null;
       if (!expanded) {
-        const overX = !!el?.closest('#x-mark');
-        setXHover(overX);
-        if (overX) {
-          pulseCycleCountRef.current = 0;
-        }
+        setXHover(!!el?.closest('#x-mark'));
         setBandRightHover(false);
         return;
       }
@@ -970,7 +731,7 @@ export function LandingHero({ useUnifiedBand = false }: LandingHeroProps) {
     (e: React.MouseEvent<HTMLDivElement>) => {
       const el = e.target as Element | null;
       if (!expanded) {
-        if (el?.closest('#x-mark') || el?.closest('.landing-x-press-hint')) {
+        if (el?.closest('#x-mark')) {
           e.preventDefault();
           expandFromX();
         }
@@ -993,7 +754,7 @@ export function LandingHero({ useUnifiedBand = false }: LandingHeroProps) {
       if (!expanded) {
         if (
           (e.key === 'Enter' || e.key === ' ') &&
-          (target?.closest('#x-mark') || target?.closest('.landing-x-press-hint'))
+          target?.closest('#x-mark')
         ) {
           e.preventDefault();
           expandFromX();
@@ -1052,7 +813,6 @@ export function LandingHero({ useUnifiedBand = false }: LandingHeroProps) {
           expanded && bandsRevealed ? 'landing-hero-css-root--bands-revealed' : '',
           expanded && useUnifiedBand ? 'landing-hero-css-root--unified-band-active' : '',
           xHover && !expanded ? 'landing-hero-css-root--x-hover' : '',
-          xHintVisible && !expanded ? 'landing-hero-css-root--x-hint-visible' : '',
           bandRightHover ? 'landing-hero-css-root--band-right' : '',
         ]
           .filter(Boolean)
@@ -1063,18 +823,7 @@ export function LandingHero({ useUnifiedBand = false }: LandingHeroProps) {
         onKeyDown={handleKeyDown}
       >
         <div dangerouslySetInnerHTML={{ __html: landingHeroSvg }} />
-        <button
-          type="button"
-          className="landing-x-press-hint"
-          tabIndex={xHintVisible && !expanded ? 0 : -1}
-          aria-hidden={!(xHintVisible && !expanded)}
-          onClick={(e) => {
-            e.stopPropagation();
-            expandFromX();
-          }}
-        >
-          Press the X to explore the work
-        </button>        {useUnifiedBand && designBandVisible ? (
+        {useUnifiedBand && designBandVisible ? (
           <div
             className="landing-unified-band-root pointer-events-auto absolute left-0 z-[22] w-full transition-opacity duration-300"
             style={{

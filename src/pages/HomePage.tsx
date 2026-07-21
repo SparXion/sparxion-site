@@ -1,8 +1,7 @@
 import { useEffect } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { LandingHero } from '../components/LandingHero';
 import { UNIFIED_BAND_PAGE_WIDTH_CSS } from '../lib/unifiedBandLayout';
-import { UCID_APP_URL } from '../lib/ucidAppUrl';
 
 export function HomePage() {
   const [searchParams] = useSearchParams();
@@ -42,51 +41,11 @@ export function HomePage() {
             Welcome — industrial design and AI-native tools from Cincinnati,
             delivered at human scale.
           </p>
-          <div className="home-hero__ctas">
-            <Link to="/contact" className="home-cta home-cta--primary">
-              Get in touch
-            </Link>
-            <a href="#work" className="home-cta home-cta--ghost">
-              Explore the work
-            </a>
-          </div>
         </div>
       </section>
 
       <section id="work" className="home-bands" aria-label="Explore the work">
         <LandingHero useUnifiedBand={useUnifiedBand} />
-
-        <div className="home-work home-work--after-bands">
-          <div className="home-work__inner">
-            <div className="home-work__products">
-              <p className="home-work__products-label">Live products &amp; contact</p>
-              <div className="home-work__product-row">
-                <a
-                  href={UCID_APP_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="home-cta home-cta--outline"
-                >
-                  UCID App
-                </a>
-                <a
-                  href="https://aitunerapp.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="home-cta home-cta--outline"
-                >
-                  AI Tuner
-                </a>
-                <a
-                  href="mailto:john@sparxion.com"
-                  className="home-cta home-cta--outline"
-                >
-                  john@sparxion.com
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
       </section>
     </div>
   );
