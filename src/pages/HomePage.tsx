@@ -27,7 +27,6 @@ export function HomePage() {
           className="home-hero__media"
           autoPlay
           muted
-          loop
           playsInline
           poster="/brand/SparXion_Logo_Smash_poster.jpg"
           aria-hidden="true"
