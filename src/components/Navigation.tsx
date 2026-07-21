@@ -1,38 +1,47 @@
 import { Link, useLocation } from 'react-router-dom';
-import SparxionLogo from '../assets/Sparxion-Logo.svg';
+import { isVioletStagePath } from '../lib/violetStage';
 
 export function Navigation() {
   const location = useLocation();
   const isHomePage = location.pathname === '/';
-  
+  const isVioletStage = isVioletStagePath(location.pathname);
+
   const navItems = [
     { label: "John's Journey", path: '/journey' },
-    { label: 'Portfolio', path: '/portfolio' },
-    { label: 'Software', path: '/software' },
     { label: 'Ethos', path: '/ethos' },
+    { label: 'Contact', path: '/contact' },
   ];
 
-  // Hide navigation completely on landing page
-  if (isHomePage) {
-    return null;
-  }
-
   return (
-    <nav className="border-b border-bold border-black">
-      <div className="max-w-[1600px] mx-auto px-medium py-small flex items-center justify-between">
-        <Link to="/" className="hover:opacity-70 transition-standard">
-          <img 
-            src={SparxionLogo} 
-            alt="SparXion" 
-            className="h-8 w-auto"
-          />
+    <nav
+      className={[
+        'site-nav',
+        isHomePage ? 'site-nav--home' : '',
+        isVioletStage && !isHomePage ? 'site-nav--violet' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
+      aria-label="Primary"
+    >
+      <div className="site-nav__inner">
+        <Link to="/" className="site-nav__logo" aria-label="SparXion home">
+          {isVioletStage ? (
+            <span className="site-nav__wordmark">SparXion</span>
+          ) : (
+            <span className="site-nav__wordmark site-nav__wordmark--ink">SparXion</span>
+          )}
         </Link>
-        <div className="flex gap-medium flex-wrap">
+        <div className="site-nav__links">
           {navItems.map((item) => (
             <Link
               key={item.path}
               to={item.path}
-              className="text-body hover:text-dark-gray transition-standard"
+              className={
+                location.pathname === item.path ||
+                location.pathname.startsWith(`${item.path}/`)
+                  ? 'site-nav__link site-nav__link--active'
+                  : 'site-nav__link'
+              }
             >
               {item.label}
             </Link>

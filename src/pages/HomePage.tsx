@@ -16,109 +16,73 @@ export function HomePage() {
 
   return (
     <div
+      className="home-welcome"
       style={{
-        margin: 0,
-        padding: 0,
-        backgroundColor: 'hsl(0, 0%, 100%)',
-        position: 'relative',
-        width: useUnifiedBand ? UNIFIED_BAND_PAGE_WIDTH_CSS : '100%',
+        width: useUnifiedBand ? UNIFIED_BAND_PAGE_WIDTH_CSS : undefined,
         minHeight: useUnifiedBand ? '100vh' : undefined,
-        overflowX: 'visible',
-        overflowY: 'visible',
-        boxSizing: 'border-box',
       }}
     >
-      <LandingHero useUnifiedBand={useUnifiedBand} />
+      <section className="home-hero" aria-label="Welcome">
+        <video
+          className="home-hero__media"
+          autoPlay
+          muted
+          loop
+          playsInline
+          poster="/brand/SparXion_Logo_Smash_poster.jpg"
+          aria-hidden="true"
+        >
+          <source src="/brand/SparXion_Logo_Smash.mp4" type="video/mp4" />
+        </video>
+        <div className="home-hero__veil" aria-hidden="true" />
 
-      <div style={{ 
-        position: 'relative',
-        bottom: 'auto',
-        paddingBottom: '50px',
-        left: '50%', 
-        transform: 'translateX(-50%)', 
-        zIndex: 10, 
-        width: '100%', 
-        maxWidth: '1200px',
-        textAlign: 'center',
-        paddingLeft: '20px',
-        paddingRight: '20px',
-        boxSizing: 'border-box'
-      }}>
-        {/* Tagline */}
-        <p className="text-body mb-medium" style={{ color: '#000000' }}>
-          delivering delight at human scale
-        </p>
-        
-        {/* Primary CTAs - External Apps & Contact */}
-        <div style={{ 
-          display: 'flex', 
-          gap: '20px', 
-          justifyContent: 'center', 
-          alignItems: 'center', 
-          flexWrap: 'wrap', 
-          marginBottom: '30px' 
-        }}>
-          <Link 
-            to="/ucid" 
-            className="btn text-body px-xlarge py-medium inline-block bg-white border-bold border-black hover:bg-black hover:text-white transition-standard"
-          >
-            Explore UCID App →
-          </Link>
-          <a 
-            href="https://aitunerapp.com" 
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn text-body px-xlarge py-medium inline-block bg-white border-bold border-black hover:bg-black hover:text-white transition-standard"
-          >
-            AI Tuner App →
-          </a>
-          <Link 
-            to="/contact"
-            className="btn text-body px-xlarge py-medium inline-block bg-white border-bold border-black hover:bg-black hover:text-white transition-standard"
-          >
-            Contact →
-          </Link>
+        <div className="home-hero__content">
+          <h1 className="home-hero__headline">Spark x Action = Discovery</h1>
+          <p className="home-hero__support">
+            Welcome — industrial design and AI-native tools from Cincinnati,
+            delivered at human scale.
+          </p>
+          <div className="home-hero__ctas">
+            <Link to="/contact" className="home-cta home-cta--primary">
+              Get in touch
+            </Link>
+            <a href="#work" className="home-cta home-cta--ghost">
+              Explore the work
+            </a>
+          </div>
         </div>
+      </section>
 
-        {/* Internal Site Navigation */}
-        <div style={{ 
-          display: 'flex', 
-          gap: '30px', 
-          justifyContent: 'center', 
-          alignItems: 'center', 
-          flexWrap: 'wrap', 
-          paddingTop: '30px', 
-          borderTop: '1px solid #e0e0e0' 
-        }}>
-          <Link 
-            to="/journey"
-            className="text-body text-medium-gray hover:text-black transition-standard"
-          >
-            John's Journey
-          </Link>
-          <span className="text-medium-gray">•</span>
-          <Link 
-            to="/portfolio"
-            className="text-body text-medium-gray hover:text-black transition-standard"
-          >
-            Portfolio
-          </Link>
-          <span className="text-medium-gray">•</span>
-          <Link 
-            to="/software"
-            className="text-body text-medium-gray hover:text-black transition-standard"
-          >
-            Software
-          </Link>
-          <span className="text-medium-gray">•</span>
-          <Link 
-            to="/ethos"
-            className="text-body text-medium-gray hover:text-black transition-standard"
-          >
-            Ethos
-          </Link>
+      <section id="work" className="home-bands" aria-label="Explore the work">
+        <LandingHero useUnifiedBand={useUnifiedBand} />
+
+        <div className="home-work home-work--after-bands">
+          <div className="home-work__inner">
+            <div className="home-work__products">
+              <p className="home-work__products-label">Live products &amp; contact</p>
+              <div className="home-work__product-row">
+                <Link to="/ucid" className="home-cta home-cta--outline">
+                  UCID App
+                </Link>
+                <a
+                  href="https://aitunerapp.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="home-cta home-cta--outline"
+                >
+                  AI Tuner
+                </a>
+                <a
+                  href="mailto:john@sparxion.com"
+                  className="home-cta home-cta--outline"
+                >
+                  john@sparxion.com
+                </a>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 }

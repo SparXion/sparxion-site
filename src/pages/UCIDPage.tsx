@@ -11,7 +11,7 @@ export function UCIDPage() {
             Connecting students with careers, companies, and opportunities.
           </p>
           <a
-            href="https://ucid-app.com"
+            href="https://ucidapp.netlify.app"
             target="_blank"
             rel="noopener noreferrer"
             className="btn text-body px-xlarge py-medium inline-block bg-black text-white hover:bg-dark-gray transition-standard"

@@ -43,7 +43,7 @@ This model treats your website as a small but meaningful application (or content
 
 #### 3. Value Objects (immutable descriptors)
 - **EthosStatement** — "Delight delivered at human scale." + supporting paragraph(s)
-- **Tagline** — "Where your spark meets action" (spark + action = SparXion)
+- **Tagline** — "Spark x Action = Discovery" (spark + action = SparXion)
 - **ProcessPhase** — one of: Discovery, Synthesis, Production, Delight  
   (Used in Ethos page and sometimes in Era/Output descriptions)
 - **DelightMetric** — qualitative or quantitative proof (e.g., "made kids feel heroic", "amplified creative genius for millions", "compressed 16-week process to 2 weeks")

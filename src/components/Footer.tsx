@@ -1,25 +1,35 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import { isVioletStagePath } from '../lib/violetStage';
 
 export function Footer() {
+  const { pathname } = useLocation();
+  const isVioletStage = isVioletStagePath(pathname);
+
   return (
-    <footer className="border-t border-bold border-black bg-white">
-      <div className="max-w-[1600px] mx-auto px-medium py-large">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-medium">
-          <div className="text-small text-medium-gray">
-            © {new Date().getFullYear()} SparXion. Where your spark meets action.
-          </div>
-          <div className="flex gap-medium">
-            <Link to="/contact" className="text-small text-medium-gray hover:text-black transition-standard">
-              Contact
-            </Link>
-            <a 
-              href="mailto:john@sparxion.com" 
-              className="text-small text-medium-gray hover:text-black transition-standard"
-            >
-              john@sparxion.com
-            </a>
-          </div>
+    <footer
+      className={`site-footer${isVioletStage ? ' site-footer--violet' : ''}`}
+    >
+      <div className="site-footer__inner">
+        <div className="site-footer__brand">
+          <p className="site-footer__name">SparXion</p>
+          <p className="site-footer__tagline">Spark × Action = Discovery</p>
         </div>
+
+        <div className="site-footer__contact">
+          <a href="mailto:john@sparxion.com">john@sparxion.com</a>
+          <span className="site-footer__sep" aria-hidden="true">
+            ·
+          </span>
+          <span>Cincinnati, Ohio</span>
+          <span className="site-footer__sep" aria-hidden="true">
+            ·
+          </span>
+          <Link to="/contact">Contact</Link>
+        </div>
+
+        <p className="site-footer__copy">
+          © {new Date().getFullYear()} SparXion
+        </p>
       </div>
     </footer>
   );

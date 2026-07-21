@@ -10,7 +10,7 @@ export interface EthosStatement {
 }
 
 export interface Tagline {
-  text: string; // "Where your spark meets action"
+  text: string; // "Spark x Action = Discovery"
 }
 
 export interface DelightMetric {

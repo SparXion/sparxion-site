@@ -17,9 +17,10 @@ module.exports = {
         'very-light-gray': '#fafafa',
       },
       fontFamily: {
-        sans: ["'Roboto'", '-apple-system', 'BlinkMacSystemFont', "'Segoe UI'", 'sans-serif'],
+        sans: ["'Figtree'", "'Exo 2'", 'sans-serif'],
         mono: ["'Monaco'", "'Menlo'", "'Courier New'", 'monospace'],
-        logo: ["'Exo 2'", 'sans-serif'], // Only for logo SVG text
+        logo: ["'Exo 2'", 'sans-serif'],
+        display: ["'Exo 2'", 'sans-serif'],
       },
       fontSize: {
         // Large headings - use weight for emphasis

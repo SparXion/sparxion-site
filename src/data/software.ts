@@ -82,7 +82,7 @@ const ucid: SoftwareItem = {
     '9 REST API endpoints',
     'Production deployed on Netlify + Railway',
   ],
-  liveUrl: 'https://sparxion.com/ucid',
+  liveUrl: 'https://ucidapp.netlify.app',
   repoPath: '/Users/johnviolette/UC | ID App Design/ucid-app/',
   featured: true,
 };
