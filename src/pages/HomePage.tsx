@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { LandingHero } from '../components/LandingHero';
 import { UNIFIED_BAND_PAGE_WIDTH_CSS } from '../lib/unifiedBandLayout';
+import { UCID_APP_URL } from '../lib/ucidAppUrl';
 
 export function HomePage() {
   const [searchParams] = useSearchParams();
@@ -60,9 +61,14 @@ export function HomePage() {
             <div className="home-work__products">
               <p className="home-work__products-label">Live products &amp; contact</p>
               <div className="home-work__product-row">
-                <Link to="/ucid" className="home-cta home-cta--outline">
+                <a
+                  href={UCID_APP_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="home-cta home-cta--outline"
+                >
                   UCID App
-                </Link>
+                </a>
                 <a
                   href="https://aitunerapp.com"
                   target="_blank"

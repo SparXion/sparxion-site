@@ -6,6 +6,7 @@ import {
   writeLandingBandScrollPersisted,
   writeLandingPendingSoftwareTileNav,
 } from '../lib/landingSession';
+import { navigateToSoftwareProject } from '../lib/ucidAppUrl';
 import { softwareImageUrl } from '../lib/softwareUrls';
 import { BandStrip, type BandStripHandle } from './BandStrip';
 import { BAND_TILE_VIEWBOX_H } from './BandTile';
@@ -152,7 +153,7 @@ export const SoftwareBandV2 = forwardRef<BandStripHandle, SoftwareBandV2Props>(f
           onSelectProject={(projectId) => {
             writeLandingPendingSoftwareTileNav();
             writeLandingBandScrollPersisted(stripRef.current?.getScrollLeft() ?? 0);
-            navigate(`/software/${encodeURIComponent(projectId)}`);
+            navigateToSoftwareProject(projectId, navigate);
           }}
           tileAriaLabelPrefix="Open software"
           ariaLabel="Software portfolio band"

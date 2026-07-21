@@ -26,6 +26,20 @@ function EraImage({ image }: { image: Image }) {
     ? 'journey-era__thumb journey-era__thumb--logo'
     : 'journey-era__thumb';
 
+  if (image.caption?.startsWith('http')) {
+    return (
+      <a
+        href={image.caption}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={`${shellClass} journey-era__thumb--link`}
+        aria-label={`Open ${image.alt}`}
+      >
+        {img}
+      </a>
+    );
+  }
+
   if (image.caption?.startsWith('/')) {
     return (
       <Link

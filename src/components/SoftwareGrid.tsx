@@ -8,6 +8,7 @@ import {
 } from '../data/software';
 import type { PublicationStatus, SoftwareCategory } from '../data/software';
 import { softwareBandImageHref } from '../lib/softwareBandImageHref';
+import { softwareProjectHref } from '../lib/ucidAppUrl';
 
 const visibleFilterTabs = softwareFilterCategories.filter(
   (tab) =>
@@ -63,34 +64,32 @@ export function SoftwareGrid() {
           {items.map((item) => {
             const muted = item.status === 'internal' || item.status === 'nascent';
             const thumbSrc = softwareBandImageHref(item.id);
-
-            return (
-              <li key={item.id}>
-                <Link
-                  to={`/software/${item.id}`}
-                  className={`group block no-underline text-inherit rounded-card overflow-hidden border transition-standard ${
-                    muted
-                      ? 'border-dashed border-border-gray bg-very-light-gray/80 opacity-[0.82] saturate-[0.65] hover:opacity-100 hover:saturate-100'
-                      : 'border-border-gray bg-white hover:shadow-medium'
-                  }`}
-                >
-                  <div className="aspect-[16/10] overflow-hidden bg-bg-gray">
-                    <img
-                      src={thumbSrc}
-                      alt={item.title}
-                      className={`w-full h-full object-cover transition-[filter] duration-300 ease-out ${
-                        muted ? 'opacity-90' : 'grayscale group-hover:grayscale-0'
-                      }`}
-                      loading="lazy"
-                    />
-                  </div>
-                  <div className={`p-medium ${muted ? 'text-medium-gray' : ''}`}>
-                    <div className="flex flex-wrap items-center gap-tiny mb-small">
-                      <span
-                        className={`inline-flex text-tiny font-medium px-small py-tiny rounded-subtle border ${statusBadgeClass(item.status)}`}
-                      >
-                        {softwareStatusLabels[item.status]}
-                      </span>
+            const projectHref = softwareProjectHref(item.id);
+            const isExternal = projectHref.startsWith('http');
+            const cardClassName = `group block no-underline text-inherit rounded-card overflow-hidden border transition-standard ${
+              muted
+                ? 'border-dashed border-border-gray bg-very-light-gray/80 opacity-[0.82] saturate-[0.65] hover:opacity-100 hover:saturate-100'
+                : 'border-border-gray bg-white hover:shadow-medium'
+            }`;
+            const cardInner = (
+              <>
+                <div className="aspect-[16/10] overflow-hidden bg-bg-gray">
+                  <img
+                    src={thumbSrc}
+                    alt={item.title}
+                    className={`w-full h-full object-cover transition-[filter] duration-300 ease-out ${
+                      muted ? 'opacity-90' : 'grayscale group-hover:grayscale-0'
+                    }`}
+                    loading="lazy"
+                  />
+                </div>
+                <div className={`p-medium ${muted ? 'text-medium-gray' : ''}`}>
+                  <div className="flex flex-wrap items-center gap-tiny mb-small">
+                    <span
+                      className={`inline-flex text-tiny font-medium px-small py-tiny rounded-subtle border ${statusBadgeClass(item.status)}`}
+                    >
+                      {softwareStatusLabels[item.status]}
+                    </span>
                       {item.featured ? (
                         <span className="inline-flex text-tiny font-medium px-small py-tiny rounded-subtle border border-black bg-black text-white">
                           Featured
@@ -120,7 +119,25 @@ export function SoftwareGrid() {
                       </p>
                     ) : null}
                   </div>
-                </Link>
+                </>
+            );
+
+            return (
+              <li key={item.id}>
+                {isExternal ? (
+                  <a
+                    href={projectHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={cardClassName}
+                  >
+                    {cardInner}
+                  </a>
+                ) : (
+                  <Link to={projectHref} className={cardClassName}>
+                    {cardInner}
+                  </Link>
+                )}
               </li>
             );
           })}

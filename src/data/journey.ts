@@ -297,7 +297,7 @@ export const journeyData: Journey = {
           url: softwareImg('ucid'),
           alt: 'UC Industrial Design Career Explorer',
           role: 'supporting' as const,
-          caption: '/software/ucid',
+          caption: 'https://ucidapp.netlify.app',
         },
         {
           url: softwareImg('ai-tuner-web'),

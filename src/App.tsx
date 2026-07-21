@@ -4,7 +4,7 @@ import { Footer } from './components/Footer';
 import { HomePage } from './pages/HomePage';
 import { JourneyPage } from './pages/JourneyPage';
 import { EthosPage } from './pages/EthosPage';
-import { UCIDPage } from './pages/UCIDPage';
+import { UcidAppRedirect } from './pages/UcidAppRedirect';
 import { AITunerPage } from './pages/AITunerPage';
 import { ContactPage } from './pages/ContactPage';
 import { PortfolioPage } from './pages/PortfolioPage';
@@ -27,7 +27,7 @@ function App() {
             <Route path="/software" element={<SoftwarePage />} />
             <Route path="/software/:id" element={<SoftwareProjectPage />} />
             <Route path="/ethos" element={<EthosPage />} />
-            <Route path="/ucid" element={<UCIDPage />} />
+            <Route path="/ucid" element={<UcidAppRedirect />} />
             <Route path="/ai-tuner" element={<AITunerPage />} />
             <Route path="/contact" element={<ContactPage />} />
           </Routes>

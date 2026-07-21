@@ -4,6 +4,8 @@ import {
   softwareStatusLabels,
   type PublicationStatus,
 } from '../data/software';
+import { UcidAppRedirect } from './UcidAppRedirect';
+import { isUcidProjectId } from '../lib/ucidAppUrl';
 import { softwareBandImageHref } from '../lib/softwareBandImageHref';
 
 function statusBadgeClass(status: PublicationStatus): string {
@@ -36,6 +38,11 @@ function primaryUrl(item: {
 export function SoftwareProjectPage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+
+  if (id && isUcidProjectId(id)) {
+    return <UcidAppRedirect />;
+  }
+
   const item = id ? getSoftwareById(id) : undefined;
 
   if (!item) {

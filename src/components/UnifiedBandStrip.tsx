@@ -17,6 +17,7 @@ import {
 import { portfolioItems } from '../data/portfolio';
 import { softwareItems } from '../data/software';
 import { portfolioBandImageHref } from '../lib/portfolioBandImageHref';
+import { navigateToSoftwareProject } from '../lib/ucidAppUrl';
 import { softwareImageUrl } from '../lib/softwareUrls';
 import type { BandStripHandle } from './BandStrip';
 import {
@@ -389,7 +390,7 @@ export const UnifiedBandStrip = forwardRef<BandStripHandle, UnifiedBandStripProp
 
     const onSelectSoftware = useCallback(
       (projectId: string) => {
-        navigate(`/software/${encodeURIComponent(projectId)}`);
+        navigateToSoftwareProject(projectId, navigate);
       },
       [navigate],
     );
