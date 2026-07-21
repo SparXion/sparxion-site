@@ -2,7 +2,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080">
   <defs>
     <clipPath id="hero-band-right-dynamic-clip" clipPathUnits="userSpaceOnUse">
-      <polygon points="1920 408.8 1107.6 408.8 1033.6 526.9 1145.2 704.9 1920 704.9"/>
+      <polygon points="1920 408.8 1014.8 408.8 944.6 526.9 1050.6 704.9 1920 704.9"/>
     </clipPath>
   </defs>
   <g id="hero-band-right" clip-path="url(#hero-band-right-dynamic-clip)">

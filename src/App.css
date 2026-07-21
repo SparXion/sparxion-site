@@ -108,12 +108,22 @@
   background: var(--sx-violet);
 }
 
+/* Home: floats over the video, then sticks as a solid violet bar when you scroll into the work. */
 .site-nav--home {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   right: 0;
   background: transparent;
+  border-bottom-color: transparent;
+  transition:
+    background-color 220ms ease,
+    border-bottom-color 220ms ease;
+}
+
+.site-nav--home.site-nav--home-scrolled {
+  background: var(--sx-violet);
+  border-bottom-color: var(--sx-line);
 }
 
 .site-nav__inner {
@@ -127,6 +137,8 @@
 }
 
 .site-nav__logo {
+  display: flex;
+  align-items: center;
   text-decoration: none;
   transition: opacity 200ms ease;
 }
@@ -135,15 +147,17 @@
   opacity: 0.75;
 }
 
-.site-nav__wordmark {
-  font-family: 'Exo 2', sans-serif;
-  font-weight: 700;
-  font-size: clamp(1.35rem, 2.5vw, 1.65rem);
-  letter-spacing: -0.02em;
+.site-nav__logo-mark {
+  display: block;
+  height: clamp(1.35rem, 2.5vw, 1.65rem);
+  width: auto;
+}
+
+.site-nav__logo-mark--light {
   color: var(--sx-ink);
 }
 
-.site-nav__wordmark--ink {
+.site-nav__logo-mark--ink {
   color: #1a1224;
 }
 
@@ -323,7 +337,7 @@
 
 .home-bands {
   background: #fff;
-  scroll-margin-top: 0;
+  scroll-margin-top: 3.5rem;
 }
 
 .home-work {

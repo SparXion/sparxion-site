@@ -19,6 +19,7 @@ import type { BandStripHandle } from './BandStrip';
 import { DesignBand } from './DesignBand';
 import { SoftwareBand } from './SoftwareBand';
 import { SoftwareBandV2 } from './SoftwareBandV2';
+import { ANCHOR_RIGHT_U } from '../lib/heroSoftwareBandClip';
 import { BAND_TILE_VIEWBOX_H } from './BandTile';
 import { UnifiedBandStrip } from './UnifiedBandStrip';
 
@@ -162,9 +163,9 @@ const heroCss = `
 }
 
 .landing-hero-css-root--expanded.landing-hero-css-root--bands-revealed svg #hero-band-right {
-  opacity: 0;
-  pointer-events: auto;
-  cursor: pointer;
+  opacity: 1;
+  pointer-events: none;
+  cursor: default;
   transition: opacity 400ms ease;
 }
 
@@ -679,19 +680,21 @@ export function LandingHero({ useUnifiedBand = false }: LandingHeroProps) {
     if (!xLarge || !svg) return;
     const rr = root.getBoundingClientRect();
     const xr = xLarge.getBoundingClientRect();
-    const viewBoxW = 1920;
-    const svgRect = svg.getBoundingClientRect();
-    const svgScale = svgRect.width > 1e-6 ? svgRect.width / viewBoxW : 0;
-    const bboxLeftU = xLarge.getBBox().x;
+    const bbox = xLarge.getBBox();
+    const bboxW = Math.max(1e-6, bbox.width);
+    /** Prefer the X's rendered scale (includes CSS transforms) over raw SVG viewBox scale. */
+    const xScale = xr.width / bboxW;
+    const rootLeft = rr.left;
+    const xLeft = xr.left;
 
     // Left wedge inner seam (apex u=861.7) — hero-root X position in px.
     const apexLeftU = 861.7;
-    const seamLeft = (xr.left - rr.left) + (apexLeftU - bboxLeftU) * svgScale;
+    const seamLeft = xLeft - rootLeft + (apexLeftU - bbox.x) * xScale;
     setXSeamPx(Math.max(0, seamLeft));
 
-    // Right wedge inner seam (inward knee ~1033.6 per `#hero-clip-band-right`) — same bbox anchor as left.
-    const anchorRightU = 1033.6;
-    const seamRight = (xr.left - rr.left) + (anchorRightU - bboxLeftU) * svgScale;
+    // Right wedge band-facing seam — mirrors left apex 861.7.
+    const anchorRightU = ANCHOR_RIGHT_U;
+    const seamRight = xLeft - rootLeft + (anchorRightU - bbox.x) * xScale;
     setRightSeamPx(Math.max(0, seamRight));
 
     const xLargeEl = svg?.querySelector<SVGGElement>('#x-mark-large');
@@ -699,11 +702,14 @@ export function LandingHero({ useUnifiedBand = false }: LandingHeroProps) {
       const onAnimEnd = (): void => {
         const rr2 = root.getBoundingClientRect();
         const xr2 = xLargeEl.getBoundingClientRect();
-        const svgRect2 = svg.getBoundingClientRect();
-        const svgScale2 = svgRect2.width > 1e-6 ? svgRect2.width / viewBoxW : 0;
-        const bboxLeftU2 = xLargeEl.getBBox().x;
-        const seamRight2 = (xr2.left - rr2.left) + (anchorRightU - bboxLeftU2) * svgScale2;
+        const bbox2 = xLargeEl.getBBox();
+        const scale2 = xr2.width / Math.max(1e-6, bbox2.width);
+        const seamRight2 =
+          xr2.left - rr2.left + (anchorRightU - bbox2.x) * scale2;
         setRightSeamPx(Math.max(0, seamRight2));
+        const seamLeft2 =
+          xr2.left - rr2.left + (apexLeftU - bbox2.x) * scale2;
+        setXSeamPx(Math.max(0, seamLeft2));
       };
       xLargeEl.addEventListener('animationend', onAnimEnd, { once: true });
       return () => xLargeEl.removeEventListener('animationend', onAnimEnd);

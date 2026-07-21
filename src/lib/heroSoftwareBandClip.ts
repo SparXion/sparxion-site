@@ -1,20 +1,25 @@
 /**
  * Right wedge for `#hero-clip-band-right` / software overlay (viewBox 0 0 1920 × 1080, band 408.8–704.9).
- * `buildHeroSoftwareBandClipPathPx` maps sketch vertices to CSS px on the clipped shell (Software + Unified).
+ * Vertices follow the **band-facing (inner) edge** of the large-X right stroke — mirror of the
+ * design-band apex at 861.7 — so software tucks into the X the same way design does.
+ * `buildHeroSoftwareBandClipPathPx` maps sketch vertices to CSS px on the clipped shell.
  */
 
 export const VIEWBOX_W = 1920;
 export const HERO_CLIP_TOP_Y = 408.8;
 export const HERO_CLIP_BOTTOM_Y = 704.9;
 export const HERO_CLIP_H = HERO_CLIP_BOTTOM_Y - HERO_CLIP_TOP_Y;
-/** Inner seam anchor (inward knee toward large X). */
-export const ANCHOR_RIGHT_U = 1033.6;
+/**
+ * Band-facing (inner) edge of the large-X right stroke — mirrors design apex 861.7
+ * on the left so software tucks to the crotch of the X, not the outer silhouette.
+ */
+export const ANCHOR_RIGHT_U = 944.6;
 
 export const BASE_VERTS_RIGHT_U: readonly [number, number][] = [
   [1920, 408.8],
-  [1107.6, 408.8],
-  [1033.6, 526.9],
-  [1145.2, 704.9],
+  [1014.8, 408.8],
+  [944.6, 526.9],
+  [1050.6, 704.9],
   [1920, 704.9],
 ];
 

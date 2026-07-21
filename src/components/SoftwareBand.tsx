@@ -14,7 +14,7 @@ export type SoftwareBandProps = {
   /** Max reveal in px (hero width) */
   maxRevealPx: number;
   /**
-   * Hero-root X (px) for the right wedge inner seam (#hero-clip-band-right knee ~1033.6u),
+   * Hero-root X (px) for the right wedge band-facing seam (#hero-clip-band-right ~944.6u),
    * mirror of `xSeamPx` on the left.
    */
   rightSeamPx?: number;
@@ -123,6 +123,7 @@ export const SoftwareBand = forwardRef<BandStripHandle, SoftwareBandProps>(funct
         transform: 'none',
         top: `calc(100% * (${HERO_WEDGE_TOP_FRAC_U}))`,
         height: `calc(100% * (${bandHeightFrac}))`,
+        backgroundColor: '#360c5e',
         clipPath: clip,
         WebkitClipPath: clip,
         /*
