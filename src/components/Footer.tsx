@@ -1,14 +1,8 @@
-import { Link, useLocation } from 'react-router-dom';
-import { isVioletStagePath } from '../lib/violetStage';
+import { Link } from 'react-router-dom';
 
 export function Footer() {
-  const { pathname } = useLocation();
-  const isVioletStage = isVioletStagePath(pathname);
-
   return (
-    <footer
-      className={`site-footer${isVioletStage ? ' site-footer--violet' : ''}`}
-    >
+    <footer className="site-footer">
       <div className="site-footer__inner">
         <div className="site-footer__brand">
           <p className="site-footer__name">SparXion</p>

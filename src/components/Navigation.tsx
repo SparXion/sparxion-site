@@ -1,35 +1,30 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { isVioletStagePath } from '../lib/violetStage';
 import { SparXionNavLogo } from './SparXionNavLogo';
 
 export function Navigation() {
   const location = useLocation();
   const isHomePage = location.pathname === '/';
-  const isVioletStage = isVioletStagePath(location.pathname);
-  /** Home: transparent over the video, solid violet once the video leaves the viewport. */
-  const [overVioletHero, setOverVioletHero] = useState(true);
+  /** Home: transparent over the video, solid white once the video leaves the viewport. */
+  const [overHero, setOverHero] = useState(true);
 
   useEffect(() => {
     if (!isHomePage) {
-      setOverVioletHero(false);
+      setOverHero(false);
       return;
     }
     const hero = document.querySelector('.home-hero');
     if (!hero) {
-      setOverVioletHero(true);
+      setOverHero(true);
       return;
     }
     const io = new IntersectionObserver(
-      ([entry]) => setOverVioletHero(Boolean(entry?.isIntersecting)),
+      ([entry]) => setOverHero(Boolean(entry?.isIntersecting)),
       { root: null, threshold: 0.12 },
     );
     io.observe(hero);
     return () => io.disconnect();
   }, [isHomePage, location.hash]);
-
-  /** Light brand logo on home + Journey / Ethos / Contact — never ink on those surfaces. */
-  const useLightLogo = isHomePage || isVioletStage;
 
   const navItems = [
     { label: "John's Journey", path: '/journey' },
@@ -42,8 +37,7 @@ export function Navigation() {
       className={[
         'site-nav',
         isHomePage ? 'site-nav--home' : '',
-        isHomePage && !overVioletHero ? 'site-nav--home-scrolled' : '',
-        isVioletStage && !isHomePage ? 'site-nav--violet' : '',
+        isHomePage && !overHero ? 'site-nav--home-scrolled' : '',
       ]
         .filter(Boolean)
         .join(' ')}
@@ -51,9 +45,7 @@ export function Navigation() {
     >
       <div className="site-nav__inner">
         <Link to="/" className="site-nav__logo" aria-label="SparXion home">
-          <SparXionNavLogo
-            className={useLightLogo ? 'site-nav__logo-mark--light' : 'site-nav__logo-mark--ink'}
-          />
+          <SparXionNavLogo className="site-nav__logo-mark--ink" />
         </Link>
         <div className="site-nav__links">
           {navItems.map((item) => (

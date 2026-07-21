@@ -1,13 +1,13 @@
 /* App-specific styles */
 :root {
-  --sx-violet: #0d0818;
-  --sx-violet-mid: #160e28;
-  --sx-violet-glow: rgba(120, 72, 180, 0.18);
-  --sx-ink: #f4f0fa;
-  --sx-ink-soft: rgba(244, 240, 250, 0.72);
-  --sx-ink-muted: rgba(244, 240, 250, 0.52);
-  --sx-line: rgba(244, 240, 250, 0.14);
-  --sx-line-strong: rgba(244, 240, 250, 0.28);
+  --sx-paper: #ffffff;
+  --sx-paper-soft: #f7f5f2;
+  --sx-ink: #1a1224;
+  --sx-ink-soft: #5a5266;
+  --sx-ink-muted: #6b6475;
+  --sx-line: rgba(26, 18, 36, 0.12);
+  --sx-line-strong: rgba(26, 18, 36, 0.28);
+  --sx-brand: #6b46c1;
 }
 
 .btn {
@@ -25,12 +25,10 @@
   transform: translateY(0);
 }
 
-/* ——— Shared deep-violet stage (home video world, no horizon) ——— */
+/* ——— Shared white stage (Journey / Ethos / Contact) ——— */
 .violet-stage {
   min-height: calc(100vh - 140px);
-  background:
-    radial-gradient(ellipse 90% 55% at 50% -10%, var(--sx-violet-glow), transparent 55%),
-    var(--sx-violet);
+  background: var(--sx-paper);
   color: var(--sx-ink);
 }
 
@@ -77,7 +75,7 @@
   text-decoration: none;
   padding: 0.85rem 1.4rem;
   background: var(--sx-ink);
-  color: var(--sx-violet);
+  color: #fff;
   border: 1.5px solid var(--sx-ink);
   transition: background 200ms ease, color 200ms ease, transform 200ms ease;
 }
@@ -102,13 +100,7 @@
   z-index: 40;
 }
 
-.site-nav--home,
-.site-nav--violet {
-  border-bottom: 1px solid var(--sx-line);
-  background: var(--sx-violet);
-}
-
-/* Home: floats over the video, then sticks as a solid violet bar when you scroll into the work. */
+/* Home: floats over the white-plate video, then sticks as a solid white bar. */
 .site-nav--home {
   position: fixed;
   top: 0;
@@ -122,8 +114,8 @@
 }
 
 .site-nav--home.site-nav--home-scrolled {
-  background: var(--sx-violet);
-  border-bottom-color: var(--sx-line);
+  background: #fff;
+  border-bottom-color: #000;
 }
 
 .site-nav__inner {
@@ -153,12 +145,8 @@
   width: auto;
 }
 
-.site-nav__logo-mark--light {
-  color: var(--sx-ink);
-}
-
 .site-nav__logo-mark--ink {
-  color: #1a1224;
+  color: var(--sx-brand);
 }
 
 .site-nav__links {
@@ -190,21 +178,9 @@
   color: #000;
 }
 
-.site-nav--home .site-nav__link,
-.site-nav--violet .site-nav__link {
-  color: var(--sx-ink-soft);
-}
-
-.site-nav--home .site-nav__link:hover,
-.site-nav--home .site-nav__link--active,
-.site-nav--violet .site-nav__link:hover,
-.site-nav--violet .site-nav__link--active {
-  color: var(--sx-ink);
-}
-
 /* ——— Home welcome ——— */
 .home-welcome {
-  background: var(--sx-violet);
+  background: var(--sx-paper);
 }
 
 .home-hero {
@@ -215,7 +191,8 @@
   align-items: flex-end;
   justify-content: center;
   overflow: hidden;
-  color: #fff;
+  color: var(--sx-ink);
+  background: #fff;
 }
 
 .home-hero__media {
@@ -233,10 +210,10 @@
   background:
     linear-gradient(
       to top,
-      rgba(6, 3, 12, 0.96) 0%,
-      rgba(6, 3, 12, 0.78) 26%,
-      rgba(6, 3, 12, 0.2) 48%,
-      rgba(6, 3, 12, 0.45) 100%
+      rgba(255, 255, 255, 0.92) 0%,
+      rgba(255, 255, 255, 0.55) 28%,
+      rgba(255, 255, 255, 0.08) 52%,
+      rgba(255, 255, 255, 0.35) 100%
     );
   pointer-events: none;
 }
@@ -259,8 +236,7 @@
   line-height: 1.2;
   letter-spacing: -0.025em;
   margin: 0 0 0.7rem;
-  color: #ffffff;
-  text-shadow: 0 2px 28px rgba(0, 0, 0, 0.55);
+  color: var(--sx-ink);
 }
 
 .home-hero__support {
@@ -269,8 +245,7 @@
   line-height: 1.5;
   max-width: 30rem;
   margin: 0 auto 1.25rem;
-  color: rgba(255, 255, 255, 0.9);
-  text-shadow: 0 1px 18px rgba(0, 0, 0, 0.5);
+  color: var(--sx-ink-soft);
 }
 
 .home-hero__ctas {
@@ -303,36 +278,37 @@
 }
 
 .home-cta--primary {
-  background: #f4f0fa;
-  color: #120c1c;
-  border-color: #f4f0fa;
+  background: var(--sx-ink);
+  color: #fff;
+  border-color: var(--sx-ink);
 }
 
 .home-cta--primary:hover {
-  background: #fff;
-  color: #000;
+  background: #000;
+  color: #fff;
+  border-color: #000;
 }
 
 .home-cta--ghost {
   background: transparent;
-  color: #f4f0fa;
-  border-color: rgba(244, 240, 250, 0.45);
+  color: var(--sx-ink);
+  border-color: rgba(26, 18, 36, 0.35);
 }
 
 .home-cta--ghost:hover {
-  border-color: #f4f0fa;
-  background: rgba(244, 240, 250, 0.08);
+  border-color: var(--sx-ink);
+  background: rgba(26, 18, 36, 0.04);
 }
 
 .home-cta--outline {
   background: transparent;
-  color: #1a1224;
-  border-color: #1a1224;
+  color: var(--sx-ink);
+  border-color: var(--sx-ink);
 }
 
 .home-cta--outline:hover {
-  background: #1a1224;
-  color: #f4f0fa;
+  background: var(--sx-ink);
+  color: #fff;
 }
 
 .home-bands {
@@ -677,7 +653,7 @@
 .journey-era__thumb {
   aspect-ratio: 1;
   overflow: hidden;
-  background: rgba(244, 240, 250, 0.06);
+  background: var(--sx-paper-soft);
   border: 1px solid var(--sx-line);
 }
 
@@ -686,7 +662,7 @@
   align-items: center;
   justify-content: center;
   padding: 0.65rem;
-  background: rgba(255, 255, 255, 0.92);
+  background: #fff;
 }
 
 .journey-era__thumb--link {
@@ -724,12 +700,6 @@
   background: #fff;
 }
 
-.site-footer--violet {
-  border-top: 1px solid var(--sx-line);
-  background: var(--sx-violet);
-  color: var(--sx-ink-soft);
-}
-
 .site-footer__inner {
   max-width: 1600px;
   margin: 0 auto;
@@ -761,19 +731,11 @@
   color: #1a1224;
 }
 
-.site-footer--violet .site-footer__name {
-  color: var(--sx-ink);
-}
-
 .site-footer__tagline {
   font-family: 'Figtree', sans-serif;
   font-size: 0.875rem;
   color: #666;
   margin: 0;
-}
-
-.site-footer--violet .site-footer__tagline {
-  color: var(--sx-ink-muted);
 }
 
 .site-footer__contact {
@@ -786,10 +748,6 @@
   color: #666;
 }
 
-.site-footer--violet .site-footer__contact {
-  color: var(--sx-ink-soft);
-}
-
 .site-footer__contact a {
   color: inherit;
   text-decoration: none;
@@ -800,16 +758,8 @@
   color: #000;
 }
 
-.site-footer--violet .site-footer__contact a:hover {
-  color: var(--sx-ink);
-}
-
 .site-footer__sep {
   color: #999;
-}
-
-.site-footer--violet .site-footer__sep {
-  color: var(--sx-ink-muted);
 }
 
 .site-footer__copy {
@@ -817,10 +767,6 @@
   font-size: 0.8rem;
   color: #999;
   margin: 0;
-}
-
-.site-footer--violet .site-footer__copy {
-  color: var(--sx-ink-muted);
 }
 
 @keyframes home-rise {
