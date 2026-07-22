@@ -20,6 +20,7 @@ import { DesignBand } from './DesignBand';
 import { SoftwareBand } from './SoftwareBand';
 import { SoftwareBandV2 } from './SoftwareBandV2';
 import { ANCHOR_RIGHT_U } from '../lib/heroSoftwareBandClip';
+import { measureHeroXSeamPx } from '../lib/heroXSeam';
 import { BAND_TILE_VIEWBOX_H } from './BandTile';
 import { UnifiedBandStrip } from './UnifiedBandStrip';
 
@@ -610,8 +611,8 @@ export function LandingHero({
     if (!root) return;
     /*
      * During early morph grow, skip live seam measure (feedback risk).
-     * Once the X is ready, measure so band clips leave a gap under the overlay X
-     * before/while bands fade in. Without rightSeamPx, SoftwareBand paints unclipped.
+     * Once the X is ready, measure from the visible overlay via SVG CTM so clips
+     * track letterboxed scale and tuck under the mark (UCID flat edge stays covered).
      */
     if (morphScrubbing && !morphXReady) {
       setXSeamPx(undefined);
@@ -623,44 +624,22 @@ export function LandingHero({
       setRightSeamPx(undefined);
       return;
     }
+
+    const applySeams = (): void => {
+      const measured = measureHeroXSeamPx(root, ANCHOR_RIGHT_U);
+      if (!measured) return;
+      setXSeamPx(measured.xSeamPx);
+      setRightSeamPx(measured.rightSeamPx);
+    };
+
+    applySeams();
+
     const svg = root.querySelector('svg');
     const xLarge = svg?.querySelector<SVGGElement>('#x-mark-large');
-    if (!xLarge || !svg) return;
-    const rr = root.getBoundingClientRect();
-    const xr = xLarge.getBoundingClientRect();
-    const bbox = xLarge.getBBox();
-    const bboxW = Math.max(1e-6, bbox.width);
-    /** Prefer the X's rendered scale (includes CSS transforms) over raw SVG viewBox scale. */
-    const xScale = xr.width / bboxW;
-    const rootLeft = rr.left;
-    const xLeft = xr.left;
-
-    // Left wedge inner seam (apex u=861.7) — hero-root X position in px.
-    const apexLeftU = 861.7;
-    const seamLeft = xLeft - rootLeft + (apexLeftU - bbox.x) * xScale;
-    setXSeamPx(Math.max(0, seamLeft));
-
-    // Right wedge band-facing seam — mirrors left apex 861.7.
-    const anchorRightU = ANCHOR_RIGHT_U;
-    const seamRight = xLeft - rootLeft + (anchorRightU - bbox.x) * xScale;
-    setRightSeamPx(Math.max(0, seamRight));
-
-    const xLargeEl = svg?.querySelector<SVGGElement>('#x-mark-large');
-    if (xLargeEl) {
-      const onAnimEnd = (): void => {
-        const rr2 = root.getBoundingClientRect();
-        const xr2 = xLargeEl.getBoundingClientRect();
-        const bbox2 = xLargeEl.getBBox();
-        const scale2 = xr2.width / Math.max(1e-6, bbox2.width);
-        const seamRight2 =
-          xr2.left - rr2.left + (anchorRightU - bbox2.x) * scale2;
-        setRightSeamPx(Math.max(0, seamRight2));
-        const seamLeft2 =
-          xr2.left - rr2.left + (apexLeftU - bbox2.x) * scale2;
-        setXSeamPx(Math.max(0, seamLeft2));
-      };
-      xLargeEl.addEventListener('animationend', onAnimEnd, { once: true });
-      return () => xLargeEl.removeEventListener('animationend', onAnimEnd);
+    if (xLarge) {
+      const onAnimEnd = (): void => applySeams();
+      xLarge.addEventListener('animationend', onAnimEnd, { once: true });
+      return () => xLarge.removeEventListener('animationend', onAnimEnd);
     }
   }, [expanded, bandsRevealed, seamResolved, maxRevealPx, morphScrubbing, morphXReady]);
 

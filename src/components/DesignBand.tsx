@@ -1,6 +1,7 @@
 import { forwardRef, useImperativeHandle, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { HERO_DESIGN_BAND_CLIP_PATH } from '../lib/heroDesignBandClip';
+import { APEX_LEFT_U, heroSvgXScale } from '../lib/heroXSeam';
 import {
   writeLandingBandScrollPersisted,
   writeLandingPendingDesignTileNav,
@@ -28,7 +29,7 @@ export type DesignBandProps = {
   maxRevealPx: number;
   /**
    * Screen-space seam position (px) relative to the hero root:
-   * the x position where the trapezoid's apex (u=861.7) should land.
+   * the x position where the trapezoid's apex (u≈861.7) should land.
    */
   xSeamPx?: number;
 };
@@ -70,7 +71,7 @@ export const DesignBand = forwardRef<BandStripHandle, DesignBandProps>(function 
   const HERO_CLIP_BOTTOM_Y = 704.9;
   const HERO_CLIP_H = HERO_CLIP_BOTTOM_Y - HERO_CLIP_TOP_Y;
   const BASE_VERTS_U: readonly [number, number][] = [
-    [861.7, 560.1],
+    [APEX_LEFT_U, 560.1],
     [769.2, 408.8],
     [0, 408.8],
     [0, 704.9],
@@ -83,14 +84,17 @@ export const DesignBand = forwardRef<BandStripHandle, DesignBandProps>(function 
     const r = el.getBoundingClientRect();
     const w = Math.max(1, r.width);
     const h = Math.max(1, r.height);
-    const xScale = w / VIEWBOX_W;
+    /** Match the painted hero SVG scale (not the full shell) so the left X edge isn't skewed. */
+    const root = el.closest('.landing-hero-css-root');
+    const xScale = heroSvgXScale(root, w, VIEWBOX_W);
     const yScale = h / HERO_CLIP_H;
 
-    const apexU = 861.7;
-    const seamPx = typeof xSeamPx === 'number' && Number.isFinite(xSeamPx) ? xSeamPx : apexU * xScale;
+    const apexU = APEX_LEFT_U;
+    const seamAt =
+      typeof xSeamPx === 'number' && Number.isFinite(xSeamPx) ? xSeamPx : apexU * xScale;
 
     const pts = BASE_VERTS_U.map(([xu, yu]) => {
-      const xPx = xu <= 1e-6 ? 0 : seamPx + (xu - apexU) * xScale;
+      const xPx = xu <= 1e-6 ? 0 : seamAt + (xu - apexU) * xScale;
       const yPx = (yu - HERO_CLIP_TOP_Y) * yScale;
       return `${xPx.toFixed(2)}px ${yPx.toFixed(2)}px`;
     }).join(', ');

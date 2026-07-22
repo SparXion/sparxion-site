@@ -5,6 +5,8 @@
  * `buildHeroSoftwareBandClipPathPx` maps sketch vertices to CSS px on the clipped shell.
  */
 
+import { heroSvgXScale } from './heroXSeam';
+
 export const VIEWBOX_W = 1920;
 export const HERO_CLIP_TOP_Y = 408.8;
 export const HERO_CLIP_BOTTOM_Y = 704.9;
@@ -57,7 +59,9 @@ export function buildHeroSoftwareBandClipPathPx(
   const r = el.getBoundingClientRect();
   const wBox = Math.max(1, r.width);
   const hBox = Math.max(1, r.height);
-  const xScale = wBox / VIEWBOX_W;
+  const root = el.closest('.landing-hero-css-root');
+  /** Match painted hero SVG scale so the X-facing edge isn't stretched vs the mark. */
+  const xScale = heroSvgXScale(root, wBox, VIEWBOX_W);
   const yScale = hBox / HERO_CLIP_H;
 
   const seamPx =
