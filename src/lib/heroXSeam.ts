@@ -6,8 +6,15 @@
 /** Design-band apex (band-facing left crotch of large X), viewBox u. */
 export const APEX_LEFT_U = 861.7;
 
-/** Pull clips slightly under the X strokes so tile edges don't peek before the mark clears. */
-export const X_SEAM_TUCK_U = 14;
+/**
+ * Software seam sample — right of the X crotch (~944.6) so tiles don't paint into the
+ * open letterform gaps (UCID was visible through the X before the mark cleared).
+ * 1014.8 matches the top of `#hero-clip-band-right`'s X-facing edge.
+ */
+export const SOFTWARE_SEAM_U = 1014.8;
+
+/** Overlap design slightly under the X so no hairline gap shows at the left crotch. */
+export const X_SEAM_LEFT_TUCK_U = -6;
 
 export type HeroXSeamPx = {
   /** Root-relative px for design apex. */
@@ -23,7 +30,7 @@ export type HeroXSeamPx = {
  */
 export function measureHeroXSeamPx(
   root: HTMLElement,
-  anchorRightU: number,
+  _anchorRightU: number,
 ): HeroXSeamPx | null {
   const svg =
     root.querySelector<SVGSVGElement>('#x-mark-large-overlay svg') ??
@@ -49,10 +56,10 @@ export function measureHeroXSeamPx(
     return pt.matrixTransform(ctm).x - rootLeft;
   };
 
-  // Mid-band Y keeps the sample on the crotch, not the X tips.
+  // Mid-band Y keeps the sample on the stroke, not the X tips.
   const midY = 560.1;
-  const xSeamPx = Math.max(0, toRootX(APEX_LEFT_U - X_SEAM_TUCK_U, midY));
-  const rightSeamPx = Math.max(0, toRootX(anchorRightU + X_SEAM_TUCK_U, midY));
+  const xSeamPx = Math.max(0, toRootX(APEX_LEFT_U - X_SEAM_LEFT_TUCK_U, midY));
+  const rightSeamPx = Math.max(0, toRootX(SOFTWARE_SEAM_U, midY));
 
   return { xSeamPx, rightSeamPx, xScale };
 }

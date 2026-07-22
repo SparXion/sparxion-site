@@ -25,7 +25,7 @@ export function HomePage() {
   const useUnifiedBand =
     searchParams.get('unified') === '1' || searchParams.get('unified') === 'true';
 
-  const [videoEnded, setVideoEnded] = useState(false);
+  const [scrollCueVisible, setScrollCueVisible] = useState(false);
   const [morphProgress, setMorphProgress] = useState(0);
   const [morphSettled, setMorphSettled] = useState(false);
   const [contactReady, setContactReady] = useState(false);
@@ -132,7 +132,15 @@ export function HomePage() {
           playsInline
           poster="/brand/SparXion_Logo_Smash_poster.jpg"
           aria-hidden="true"
-          onEnded={() => setVideoEnded(true)}
+          onTimeUpdate={(e) => {
+            const v = e.currentTarget;
+            if (!Number.isFinite(v.duration) || v.duration <= 0) return;
+            // Appear 2s before the smash ends.
+            if (v.currentTime >= Math.max(0, v.duration - 2)) {
+              setScrollCueVisible(true);
+            }
+          }}
+          onEnded={() => setScrollCueVisible(true)}
         >
           <source src="/brand/SparXion_Logo_Smash.mp4" type="video/mp4" />
         </video>
@@ -142,7 +150,7 @@ export function HomePage() {
           type="button"
           className={[
             'home-scroll-cue',
-            videoEnded ? 'home-scroll-cue--visible' : '',
+            scrollCueVisible ? 'home-scroll-cue--visible' : '',
           ]
             .filter(Boolean)
             .join(' ')}
