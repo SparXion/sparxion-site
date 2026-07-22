@@ -19,7 +19,8 @@ body {
   min-height: 100vh;
   margin: 0;
   padding: 0;
-  overflow-x: hidden;
+  /* Do not set overflow here — overflow-x:hidden makes overflow-y compute to auto,
+     which turns #root into a scrollport and breaks position:sticky for the home morph. */
   background-color: hsl(0, 0%, 100%);
 }
 
@@ -27,8 +28,9 @@ html, body {
   margin: 0;
   padding: 0;
   width: 100%;
-  height: 100%;
-  overflow-x: hidden;
+  min-height: 100%;
+  /* clip avoids creating a scrollport (unlike hidden), so position:sticky can pin to the viewport */
+  overflow-x: clip;
 }
 
 /* Unified home: document is as wide as positioning artboard; window (e.g. 1920) scrolls horizontally. */

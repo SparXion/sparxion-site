@@ -41,6 +41,11 @@ const TEMP_DISABLE_HERO_RIGHT_SVG_CLIP = false;
 export type LandingHeroProps = {
   /** `?unified=1` — single strip + shell wedge instead of separate design/software rails. */
   useUnifiedBand?: boolean;
+  /**
+   * Scroll-morph prototype: 0 → idle wordmark, 1 → large X + bands revealed.
+   * When set, expand is driven by this value instead of clicking the X.
+   */
+  morphProgress?: number;
 };
 
 type HeroWheelState =
@@ -117,14 +122,28 @@ const heroCss = `
   max-height: min(92vh, calc(100vw * 1080 / 1920));
 }
 
-/* Band reveal + hover (Software wedge only; left half is DesignBand overlay) */
+.landing-hero-css-root--scroll-morph {
+  width: min(96vw, calc(100vh * 1920 / 1080)) !important;
+  max-width: 100%;
+  height: auto;
+  max-height: 100%;
+  display: block;
+  margin: 0 auto;
+}
+
+.landing-hero-css-root--scroll-morph svg {
+  width: 100%;
+  height: auto;
+  max-height: min(92vh, calc(100vw * 1080 / 1920));
+}
+
+/* Band reveal (Software wedge underlay; left half is DesignBand overlay) */
 .landing-hero-css-root svg #hero-band-right {
   opacity: 0;
   transition: none;
   pointer-events: none;
   translate: var(--landing-reveal-px) 0;
-  transform: scale(1);
-  transform-origin: 1425px 557px;
+  transform: none;
 }
 
 /* SVG Software wedge: hidden until large X finishes growing (JS adds --bands-revealed). */
@@ -134,17 +153,14 @@ const heroCss = `
   transition: none;
 }
 
+/*
+ * Once HTML Design/Software bands are up, keep the SVG wedge hidden.
+ * Scaling it on hover used to grow an X-shaped purple mask under the tiles.
+ */
 .landing-hero-css-root--expanded.landing-hero-css-root--bands-revealed svg #hero-band-right {
-  opacity: 1;
+  opacity: 0;
   pointer-events: none;
-  cursor: default;
-  transition: opacity 400ms ease;
-}
-
-.landing-hero-css-root--expanded.landing-hero-css-root--bands-revealed.landing-hero-css-root--band-right
-  svg
-  #hero-band-right {
-  transform: scale(1.03);
+  visibility: hidden;
 }
 
 /* Wordmark + tagline fade out on expand */
@@ -283,6 +299,75 @@ const heroCss = `
   opacity: 0 !important;
   pointer-events: none !important;
 }
+
+/* ——— Scroll-morph: scrub grow / fades from --landing-morph-* (set in JS) ——— */
+.landing-hero-css-root--scroll-morph svg #wordmark,
+.landing-hero-css-root--scroll-morph svg #tagline {
+  opacity: calc(1 - var(--landing-morph-fade, 0));
+  transition: none;
+}
+
+.landing-hero-css-root--scroll-morph.landing-hero-css-root--expanded svg #wordmark,
+.landing-hero-css-root--scroll-morph.landing-hero-css-root--expanded svg #tagline {
+  opacity: calc(1 - var(--landing-morph-fade, 0));
+}
+
+/*
+ * Grow uses the same center+scale lerp as the click-expand keyframes
+ * (--landing-x-t), so the mark stays aligned through the whole scrub.
+ * Do not scale #x-mark in the wordmark pocket — that drifts off the large rest pose.
+ */
+.landing-hero-css-root--scroll-morph.landing-hero-css-root--expanded svg #x-mark {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.landing-hero-css-root--scroll-morph.landing-hero-css-root--expanded svg #x-mark-large {
+  animation: none !important;
+  visibility: visible;
+  opacity: 1;
+  --landing-x-t: var(--landing-morph-grow, 0);
+  translate: 0 0;
+}
+
+/* Idle #x-mark also sits in the optical pocket (scroll-morph + pre-expand). */
+.landing-hero-css-root--scroll-morph:not(.landing-hero-css-root--expanded) svg #x-mark {
+  transform-box: view-box;
+  transform-origin: 0 0;
+  transform: translate(
+      calc(var(--landing-x-sx, 971) * 1px),
+      calc(var(--landing-x-sy, 540) * 1px)
+    )
+    translate(
+      calc(var(--landing-x-cx, 971) * -1px),
+      calc(var(--landing-x-cy, 540) * -1px)
+    );
+}
+
+.landing-hero-css-root--scroll-morph.landing-hero-css-root--expanded.landing-hero-css-root--bands-revealed
+  svg
+  #hero-band-right {
+  /* HTML bands own the paint — do not fade the SVG wedge back in during morph. */
+  opacity: 0;
+  visibility: hidden;
+  transition: none;
+}
+
+/*
+ * HTML bands sit above the SVG X (z-19/20). The separate overlay X (z-50) must cover
+ * the center seam once the mark is grown — do not hide it for the whole morph.
+ */
+.landing-hero-css-root--scroll-morph #x-mark-large-overlay svg {
+  opacity: 0;
+  visibility: hidden;
+  transition: none;
+}
+
+.landing-hero-css-root--scroll-morph.landing-hero-css-root--morph-x-ready #x-mark-large-overlay svg {
+  opacity: 1;
+  visibility: visible;
+}
 `;
 
 function measureXBboxes(root: HTMLElement): void {
@@ -296,19 +381,35 @@ function measureXBboxes(root: HTMLElement): void {
   if (!(bl.width > 1e-6 && bl.height > 1e-6)) return;
 
   const sMin = Math.min(bs.width / bl.width, bs.height / bl.height);
-  const sx = bs.x + bs.width / 2;
-  const sy = bs.y + bs.height / 2;
+  /**
+   * Wordmark leaves a gap (~930–1010u) for the X; #x-mark’s bbox center sits a bit right
+   * of that optical pocket. Grow around the nudged hinge.
+   */
+  const cx = bs.x + bs.width / 2;
+  const cy = bs.y + bs.height / 2;
+  const nudgeX = -12;
+  const nudgeY = 8;
+  const sx = cx + nudgeX;
+  const sy = cy + nudgeY;
   const lx = bl.x + bl.width / 2;
   const ly = bl.y + bl.height / 2;
 
   root.style.setProperty('--landing-x-grow-from', String(sMin));
+  root.style.setProperty('--landing-x-cx', String(cx));
+  root.style.setProperty('--landing-x-cy', String(cy));
   root.style.setProperty('--landing-x-sx', String(sx));
   root.style.setProperty('--landing-x-sy', String(sy));
   root.style.setProperty('--landing-x-lx', String(lx));
   root.style.setProperty('--landing-x-ly', String(ly));
+  root.style.setProperty('--landing-x-nudge-x', String(nudgeX));
+  root.style.setProperty('--landing-x-nudge-y', String(nudgeY));
 }
 
-export function LandingHero({ useUnifiedBand = false }: LandingHeroProps) {
+export function LandingHero({
+  useUnifiedBand = false,
+  morphProgress,
+}: LandingHeroProps) {
+  const scrollMorph = typeof morphProgress === 'number';
   const navigate = useNavigate();
   const navigationType = useNavigationType();
   const [expanded, setExpanded] = useState(false);
@@ -346,10 +447,7 @@ export function LandingHero({ useUnifiedBand = false }: LandingHeroProps) {
   }, [expanded]);
 
   const [xHover, setXHover] = useState(false);
-  const [bandRightHover, setBandRightHover] = useState(false);
   const [bandsRevealed, setBandsRevealed] = useState(false);
-  const designBandVisible = expanded && bandsRevealed;
-  const softwareBandVisible = expanded && bandsRevealed;
   const hostRef = useRef<HTMLDivElement>(null);
   const designStripRef = useRef<BandStripHandle>(null);
   const softwareStripRef = useRef<BandStripHandle>(null);
@@ -360,10 +458,76 @@ export function LandingHero({ useUnifiedBand = false }: LandingHeroProps) {
   const maxRevealPxRef = useRef(maxRevealPx);
   const [xSeamPx, setXSeamPx] = useState<number | undefined>(undefined);
   const [rightSeamPx, setRightSeamPx] = useState<number | undefined>(undefined);
+  /**
+   * Once morph finishes, stay unlocked through sticky-scroll bounce near the end.
+   * Only re-lock when the user clearly scrolls back into the morph (hysteresis).
+   */
+  const [morphUnlocked, setMorphUnlocked] = useState(false);
+  /** Large X finished growing — overlay X + seam measure may run; bands wait for this. */
+  const [morphXReady, setMorphXReady] = useState(false);
+  /** Morph CSS only while scrubbing — after unlock, use the normal expanded hero path. */
+  const morphScrubbing = scrollMorph && !morphUnlocked;
+  /** During morph scrub, wait for measured X seams so bands never paint unclipped/overlapping. */
+  const seamsReady =
+    typeof xSeamPx === 'number' && typeof rightSeamPx === 'number';
+  const designBandVisible =
+    expanded && bandsRevealed && (!morphScrubbing || seamsReady);
+  const softwareBandVisible = designBandVisible;
 
   const expandFromX = useCallback(() => {
+    if (scrollMorph) return;
     setExpanded(true);
-  }, []);
+  }, [scrollMorph]);
+
+  /** Scroll-morph: map progress → expand / grow / band reveal + CSS vars. */
+  useLayoutEffect(() => {
+    if (!scrollMorph || morphProgress == null) return;
+    const t = Math.min(1, Math.max(0, morphProgress));
+    /*
+     * Sequence — X must fully cover the seam before any band paint:
+     *  0.00–0.22  fade wordmark / tagline
+     *  0.16–0.78  grow X (same center lerp as click-expand)
+     *  ≥0.78      morph-x-ready → overlay X + seam clips
+     *  0.86–1.00  fade bands in under the overlay X
+     */
+    const fade = Math.min(1, Math.max(0, t / 0.22));
+    const grow = Math.min(1, Math.max(0, (t - 0.16) / 0.62));
+    const xReady = grow >= 0.98;
+    const band = xReady ? Math.min(1, Math.max(0, (t - 0.86) / 0.14)) : 0;
+    const shouldExpand = t >= 0.06;
+    const shouldBands = xReady && t >= 0.86;
+
+    if (t >= 0.98 && !morphUnlocked) setMorphUnlocked(true);
+    else if (t < 0.75 && morphUnlocked) setMorphUnlocked(false);
+
+    const morphComplete = morphUnlocked || t >= 0.98;
+
+    setExpanded(shouldExpand);
+    setBandsRevealed(shouldBands || morphComplete);
+    setMorphXReady(xReady || morphComplete);
+
+    const root = hostRef.current;
+    if (!root) return;
+
+    // After unlock we drop --scroll-morph and use the normal expanded hero.
+    // Only write scrub vars while still morphing.
+    if (!morphComplete) {
+      root.style.setProperty('--landing-morph-fade', String(fade));
+      root.style.setProperty('--landing-morph-grow', String(grow));
+      root.style.setProperty('--landing-morph-band', String(band));
+      root.classList.toggle('landing-hero-css-root--morph-x-ready', xReady);
+      if (maxRevealPx > 0) {
+        setSeamPx(maxRevealPx / 2);
+        root.style.setProperty('--landing-reveal-px', '0px');
+      }
+      return;
+    }
+
+    root.style.removeProperty('--landing-morph-fade');
+    root.style.removeProperty('--landing-morph-grow');
+    root.style.removeProperty('--landing-morph-band');
+    root.classList.remove('landing-hero-css-root--morph-x-ready');
+  }, [scrollMorph, morphProgress, maxRevealPx, morphUnlocked]);
 
   useLayoutEffect(() => {
     seamPxRef.current = seamResolved;
@@ -374,6 +538,7 @@ export function LandingHero({ useUnifiedBand = false }: LandingHeroProps) {
   }, [maxRevealPx]);
 
   useLayoutEffect(() => {
+    if (scrollMorph) return;
     if (!expanded) {
       setBandsRevealed(false);
       return;
@@ -384,9 +549,10 @@ export function LandingHero({ useUnifiedBand = false }: LandingHeroProps) {
     if (landingRestored || reduceMotion) {
       setBandsRevealed(true);
     }
-  }, [expanded, landingRestored]);
+  }, [expanded, landingRestored, scrollMorph]);
 
   useEffect(() => {
+    if (scrollMorph) return;
     if (!expanded) return;
     const reduceMotion =
       typeof window !== 'undefined' &&
@@ -394,14 +560,18 @@ export function LandingHero({ useUnifiedBand = false }: LandingHeroProps) {
     if (landingRestored || reduceMotion) return;
     const id = window.setTimeout(() => setBandsRevealed(true), LANDING_LARGE_X_GROW_MS);
     return () => clearTimeout(id);
-  }, [expanded, landingRestored]);
+  }, [expanded, landingRestored, scrollMorph]);
 
   useLayoutEffect(() => {
+    if (morphScrubbing) {
+      hostRef.current?.style.setProperty('--landing-reveal-px', '0px');
+      return;
+    }
     const w = maxRevealPx;
     /** Legacy translate magnitude: revealPx = W − 2·seamPx (center 0, design +W, software −W). */
     const legacyRevealPx = w > 0 ? w - 2 * seamResolved : 0;
     hostRef.current?.style.setProperty('--landing-reveal-px', `${Math.round(legacyRevealPx)}px`);
-  }, [seamResolved, maxRevealPx]);
+  }, [seamResolved, maxRevealPx, morphScrubbing]);
 
   useLayoutEffect(() => {
     const root = hostRef.current;
@@ -430,12 +600,25 @@ export function LandingHero({ useUnifiedBand = false }: LandingHeroProps) {
     const el = hostRef.current;
     if (!el) return;
     measureXBboxes(el);
-  }, [expanded]);
+    const ro = new ResizeObserver(() => measureXBboxes(el));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [expanded, landingHeroSvg, scrollMorph, morphProgress]);
 
   useLayoutEffect(() => {
     const root = hostRef.current;
     if (!root) return;
-    if (!expanded || !bandsRevealed) {
+    /*
+     * During early morph grow, skip live seam measure (feedback risk).
+     * Once the X is ready, measure so band clips leave a gap under the overlay X
+     * before/while bands fade in. Without rightSeamPx, SoftwareBand paints unclipped.
+     */
+    if (morphScrubbing && !morphXReady) {
+      setXSeamPx(undefined);
+      setRightSeamPx(undefined);
+      return;
+    }
+    if (!expanded || (!bandsRevealed && !morphXReady)) {
       setXSeamPx(undefined);
       setRightSeamPx(undefined);
       return;
@@ -479,7 +662,7 @@ export function LandingHero({ useUnifiedBand = false }: LandingHeroProps) {
       xLargeEl.addEventListener('animationend', onAnimEnd, { once: true });
       return () => xLargeEl.removeEventListener('animationend', onAnimEnd);
     }
-  }, [expanded, bandsRevealed, seamResolved, maxRevealPx]);
+  }, [expanded, bandsRevealed, seamResolved, maxRevealPx, morphScrubbing, morphXReady]);
 
   useLayoutEffect(() => {
     const root = hostRef.current;
@@ -542,11 +725,13 @@ export function LandingHero({ useUnifiedBand = false }: LandingHeroProps) {
   /**
    * Hero wheel: derived state from seamPx + strip scroll (no separate React state).
    * Full-bleed rails: scroll-first via scrollHorizontalBy(dx); closing gestures only when strip did not move.
+   * During scroll-morph, leave vertical scroll alone until the morph finishes.
    */
   useEffect(() => {
     const root = hostRef.current;
     if (!root) return;
     if (!expanded || !bandsRevealed || !(maxRevealPx > 0)) return;
+    if (morphScrubbing) return;
 
     const stripMoved = (
       _rail: 'design' | 'software',
@@ -694,22 +879,15 @@ export function LandingHero({ useUnifiedBand = false }: LandingHeroProps) {
 
     root.addEventListener('wheel', onWheel, { passive: false });
     return () => root.removeEventListener('wheel', onWheel);
-  }, [expanded, bandsRevealed, maxRevealPx, setSeamPx, useUnifiedBand]);
+  }, [expanded, bandsRevealed, maxRevealPx, setSeamPx, useUnifiedBand, morphScrubbing]);
 
   const handlePointerMove = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
       const el = e.target as Element | null;
       if (!expanded) {
         setXHover(!!el?.closest('#x-mark'));
-        setBandRightHover(false);
         return;
       }
-      setBandRightHover(
-        !!(
-          el?.closest('.landing-software-band-shell') ||
-          el?.closest('.landing-unified-band-root')
-        ),
-      );
       setXHover(false);
     },
     [expanded]
@@ -717,7 +895,6 @@ export function LandingHero({ useUnifiedBand = false }: LandingHeroProps) {
 
   const handlePointerLeave = useCallback(() => {
     setXHover(false);
-    setBandRightHover(false);
   }, []);
 
   /** Tile buttons handle their own navigation; only non-tile band clicks go to the grid. */
@@ -779,7 +956,7 @@ export function LandingHero({ useUnifiedBand = false }: LandingHeroProps) {
     const root = hostRef.current;
     if (!root) return;
     const smallBtn = root.querySelector('#x-mark');
-    if (expanded) {
+    if (expanded || scrollMorph) {
       smallBtn?.removeAttribute('tabIndex');
       smallBtn?.removeAttribute('role');
       smallBtn?.removeAttribute('aria-label');
@@ -790,12 +967,13 @@ export function LandingHero({ useUnifiedBand = false }: LandingHeroProps) {
       smallBtn?.setAttribute('aria-label', 'Expand SparXion home navigation');
       smallBtn?.setAttribute('aria-expanded', 'false');
     }
-  }, [expanded, bandsRevealed]);
+  }, [expanded, bandsRevealed, scrollMorph]);
 
   return (
     <section
       className={[
-        'flex min-h-screen w-full flex-shrink-0 flex-col items-center justify-center bg-white py-10',
+        'flex w-full flex-shrink-0 flex-col items-center justify-center bg-white',
+        scrollMorph ? 'min-h-0 h-full py-0' : 'min-h-screen py-10',
         useUnifiedBand ? 'px-0' : 'px-3',
       ]
         .filter(Boolean)
@@ -808,12 +986,14 @@ export function LandingHero({ useUnifiedBand = false }: LandingHeroProps) {
         className={[
           'landing-hero-css-root max-w-none',
           useUnifiedBand ? 'landing-hero-css-root--unified-band-page' : '',
+          morphScrubbing ? 'landing-hero-css-root--scroll-morph' : '',
           expanded ? 'landing-hero-css-root--expanded' : '',
-          expanded && landingRestored ? 'landing-hero-css-root--landing-restored' : '',
+          expanded && (landingRestored || morphUnlocked)
+            ? 'landing-hero-css-root--landing-restored'
+            : '',
           expanded && bandsRevealed ? 'landing-hero-css-root--bands-revealed' : '',
           expanded && useUnifiedBand ? 'landing-hero-css-root--unified-band-active' : '',
-          xHover && !expanded ? 'landing-hero-css-root--x-hover' : '',
-          bandRightHover ? 'landing-hero-css-root--band-right' : '',
+          xHover && !expanded && !scrollMorph ? 'landing-hero-css-root--x-hover' : '',
         ]
           .filter(Boolean)
           .join(' ')}

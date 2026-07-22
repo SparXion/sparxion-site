@@ -119,7 +119,7 @@ export function JourneyPage() {
     <div className="violet-stage journey-page">
       <div className="violet-stage__inner journey-page__inner">
         <p className="violet-stage__eyebrow">Story</p>
-        <h1 className="violet-stage__title">John's Journey</h1>
+        <h1 className="violet-stage__title">Journey</h1>
         <p className="violet-stage__lede">
           The chronological sequence of eras that tells the story.
         </p>

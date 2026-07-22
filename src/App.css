@@ -101,6 +101,19 @@
 }
 
 /* Home: floats over the white-plate video, then sticks as a solid white bar. */
+.site-nav--home.site-nav--home-scrolled {
+  background: #fff;
+  border-bottom-color: #000;
+}
+
+.site-nav--home.site-nav--band-hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-100%);
+  background: transparent;
+  border-bottom-color: transparent;
+}
+
 .site-nav--home {
   position: fixed;
   top: 0;
@@ -110,12 +123,9 @@
   border-bottom-color: transparent;
   transition:
     background-color 220ms ease,
-    border-bottom-color 220ms ease;
-}
-
-.site-nav--home.site-nav--home-scrolled {
-  background: #fff;
-  border-bottom-color: #000;
+    border-bottom-color 220ms ease,
+    opacity 280ms ease,
+    transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .site-nav__inner {
@@ -200,8 +210,9 @@
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  object-position: center 42%;
+  object-fit: contain;
+  object-position: center center;
+  background: #fff;
 }
 
 .home-hero__veil {
@@ -210,10 +221,10 @@
   background:
     linear-gradient(
       to top,
-      rgba(255, 255, 255, 0.92) 0%,
-      rgba(255, 255, 255, 0.55) 28%,
-      rgba(255, 255, 255, 0.08) 52%,
-      rgba(255, 255, 255, 0.35) 100%
+      rgba(255, 255, 255, 0.55) 0%,
+      rgba(255, 255, 255, 0.12) 32%,
+      rgba(255, 255, 255, 0) 58%,
+      rgba(255, 255, 255, 0.2) 100%
     );
   pointer-events: none;
 }
@@ -227,6 +238,163 @@
   margin: 0 auto;
   text-align: center;
   animation: home-rise 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.home-scroll-cue {
+  position: absolute;
+  left: 50%;
+  bottom: 1.75rem;
+  z-index: 2;
+  transform: translateX(-50%);
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 700ms ease;
+}
+
+.home-scroll-cue--visible {
+  opacity: 0.55;
+  pointer-events: auto;
+  animation: home-scroll-cue-pulse 2.4s ease-in-out infinite;
+}
+
+.home-scroll-cue:hover,
+.home-scroll-cue:focus-visible {
+  opacity: 0.9;
+  outline: none;
+}
+
+.home-scroll-cue__arrow {
+  display: block;
+  width: 0.7rem;
+  height: 0.7rem;
+  margin: 0.55rem auto 0;
+  border-right: 1.5px solid var(--sx-ink);
+  border-bottom: 1.5px solid var(--sx-ink);
+  transform: rotate(45deg);
+}
+
+@keyframes home-scroll-cue-pulse {
+  0%,
+  100% {
+    transform: translateX(-50%) translateY(0);
+    opacity: 0.4;
+  }
+  50% {
+    transform: translateX(-50%) translateY(6px);
+    opacity: 0.75;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-scroll-cue--visible {
+    animation: none;
+    opacity: 0.65;
+  }
+}
+
+/* Scroll-morph track: sticky LandingHero scrubbed by vertical scroll */
+.home-morph {
+  position: relative;
+  height: 240vh;
+  background: #fff;
+  scroll-margin-top: 0;
+}
+
+/* After morph completes: drop scrub runway — band stage is a normal viewport section. */
+.home-morph--settled {
+  height: 100vh;
+  height: 100dvh;
+}
+
+.home-morph__sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Must stay visible — left/right X translate paints past the artboard edges. */
+  overflow: visible;
+  background: #fff;
+  padding: 0 0.75rem;
+}
+
+.home-morph--settled .home-morph__sticky {
+  position: relative;
+}
+
+.home-morph__copy {
+  position: absolute;
+  left: 50%;
+  bottom: 1rem;
+  z-index: 20;
+  transform: translateX(-50%);
+  margin: 0;
+  font-family: 'Figtree', sans-serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+  color: #999;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Contact CTA — viewport overlay under the X; does not move with band reveal. */
+.home-contact-overlay {
+  position: absolute;
+  left: 50%;
+  top: 72%;
+  z-index: 30;
+  transform: translate(-50%, 0);
+  font-family: 'Figtree', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  color: var(--sx-ink);
+  background: rgba(255, 255, 255, 0.92);
+  border: 1.5px solid var(--sx-ink);
+  padding: 0.65rem 1.35rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 600ms ease, transform 200ms ease, background 200ms ease;
+}
+
+.home-contact-overlay--visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.home-contact-overlay:hover,
+.home-contact-overlay:focus-visible {
+  background: var(--sx-ink);
+  color: #fff;
+  outline: none;
+}
+
+.home-contact-overlay:hover {
+  transform: translate(-50%, -1px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-contact-overlay {
+    transition: opacity 200ms ease;
+  }
+
+  .home-contact-overlay:hover {
+    transform: translate(-50%, 0);
+  }
+}
+
+.home-bands {
+  background: #fff;
+  scroll-margin-top: 3.5rem;
 }
 
 .home-hero__headline {
@@ -309,11 +477,6 @@
 .home-cta--outline:hover {
   background: var(--sx-ink);
   color: #fff;
-}
-
-.home-bands {
-  background: #fff;
-  scroll-margin-top: 3.5rem;
 }
 
 .home-work {
