@@ -47,6 +47,8 @@ export type LandingHeroProps = {
    * When set, expand is driven by this value instead of clicking the X.
    */
   morphProgress?: number;
+  /** Mobile home: open a band once the large X / seams are ready. */
+  openBandSide?: 'design' | 'software' | null;
 };
 
 type HeroWheelState =
@@ -488,6 +490,7 @@ function measureXBboxes(root: HTMLElement): void {
 export function LandingHero({
   useUnifiedBand = false,
   morphProgress,
+  openBandSide = null,
 }: LandingHeroProps) {
   const scrollMorph = typeof morphProgress === 'number';
   const navigate = useNavigate();
@@ -587,6 +590,13 @@ export function LandingHero({
     if (bandExploreSide === 'design') setExploreCategory('product design');
     else if (bandExploreSide === 'software') setExploreCategory('software design');
   }, [bandExploreSide]);
+
+  /** Mobile entry: snap the seam open once bands can paint. */
+  useEffect(() => {
+    if (!openBandSide || maxRevealPx <= 0 || !bandsRevealed) return;
+    if (scrollMorph && !morphUnlocked) return;
+    setSeamPx(openBandSide === 'design' ? 0 : maxRevealPx);
+  }, [openBandSide, maxRevealPx, bandsRevealed, scrollMorph, morphUnlocked]);
 
   const expandFromX = useCallback(() => {
     if (scrollMorph) return;
