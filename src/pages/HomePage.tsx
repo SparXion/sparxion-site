@@ -19,6 +19,8 @@ function getScrollTop(): number {
 }
 
 const CONTACT_OVERLAY_DELAY_MS = 7_000;
+/** Scroll arrow after the brand equation has had a beat on screen. */
+const SCROLL_CUE_AFTER_TAGLINE_MS = 1_400;
 
 export function HomePage() {
   const [searchParams] = useSearchParams();
@@ -26,6 +28,10 @@ export function HomePage() {
     searchParams.get('unified') === '1' || searchParams.get('unified') === 'true';
 
   const [scrollCueVisible, setScrollCueVisible] = useState(false);
+  const [taglineVisible, setTaglineVisible] = useState(false);
+  const [bandExploreSide, setBandExploreSide] = useState<'design' | 'software' | null>(
+    null,
+  );
   const [morphProgress, setMorphProgress] = useState(0);
   const [morphSettled, setMorphSettled] = useState(false);
   const [contactReady, setContactReady] = useState(false);
@@ -55,6 +61,16 @@ export function HomePage() {
     const id = window.setTimeout(() => setContactReady(true), CONTACT_OVERLAY_DELAY_MS);
     return () => window.clearTimeout(id);
   }, [morphSettled]);
+
+  /** Equation first; bouncing arrow follows after a short beat. */
+  useEffect(() => {
+    if (!taglineVisible) {
+      setScrollCueVisible(false);
+      return;
+    }
+    const id = window.setTimeout(() => setScrollCueVisible(true), SCROLL_CUE_AFTER_TAGLINE_MS);
+    return () => window.clearTimeout(id);
+  }, [taglineVisible]);
 
   const updateMorphProgress = useCallback(() => {
     const track = morphTrackRef.current;
@@ -132,19 +148,22 @@ export function HomePage() {
           playsInline
           poster="/brand/SparXion_Logo_Smash_poster.jpg"
           aria-hidden="true"
-          onTimeUpdate={(e) => {
-            const v = e.currentTarget;
-            if (!Number.isFinite(v.duration) || v.duration <= 0) return;
-            // Appear 2s before the smash ends.
-            if (v.currentTime >= Math.max(0, v.duration - 2)) {
-              setScrollCueVisible(true);
-            }
-          }}
-          onEnded={() => setScrollCueVisible(true)}
+          onEnded={() => setTaglineVisible(true)}
         >
           <source src="/brand/SparXion_Logo_Smash.mp4" type="video/mp4" />
         </video>
         <div className="home-hero__veil" aria-hidden="true" />
+
+        <p
+          className={[
+            'home-brand-phrase',
+            taglineVisible ? 'home-brand-phrase--visible' : '',
+          ]
+            .filter(Boolean)
+            .join(' ')}
+        >
+          Spark × Action = Discovery
+        </p>
 
         <button
           type="button"
@@ -174,7 +193,23 @@ export function HomePage() {
           <LandingHero
             useUnifiedBand={useUnifiedBand}
             morphProgress={morphProgress}
+            onBandSideChange={setBandExploreSide}
           />
+          <p
+            className={[
+              'home-brand-phrase',
+              bandExploreSide ? 'home-brand-phrase--visible' : '',
+            ]
+              .filter(Boolean)
+              .join(' ')}
+            aria-live="polite"
+          >
+            {bandExploreSide === 'design'
+              ? 'explore product design'
+              : bandExploreSide === 'software'
+                ? 'explore software design'
+                : '\u00a0'}
+          </p>
           <Link
             to="/contact"
             className={[

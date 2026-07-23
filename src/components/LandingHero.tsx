@@ -47,6 +47,8 @@ export type LandingHeroProps = {
    * When set, expand is driven by this value instead of clicking the X.
    */
   morphProgress?: number;
+  /** Fires when the X leans into design (right) or software (left); null when centered. */
+  onBandSideChange?: (side: 'design' | 'software' | null) => void;
 };
 
 type HeroWheelState =
@@ -409,6 +411,7 @@ function measureXBboxes(root: HTMLElement): void {
 export function LandingHero({
   useUnifiedBand = false,
   morphProgress,
+  onBandSideChange,
 }: LandingHeroProps) {
   const scrollMorph = typeof morphProgress === 'number';
   const navigate = useNavigate();
@@ -474,6 +477,32 @@ export function LandingHero({
   const designBandVisible =
     expanded && bandsRevealed && (!morphScrubbing || seamsReady);
   const softwareBandVisible = designBandVisible;
+
+  /**
+   * Seam ↓ (X right) → design / product. Seam ↑ (X left) → software.
+   * Dead zone around center so the phrase doesn't flicker at rest.
+   */
+  useEffect(() => {
+    if (!onBandSideChange) return;
+    const bandLive =
+      designBandVisible && (!scrollMorph || morphUnlocked) && maxRevealPx > 0;
+    if (!bandLive) {
+      onBandSideChange(null);
+      return;
+    }
+    const mid = maxRevealPx / 2;
+    const dead = Math.max(24, maxRevealPx * 0.05);
+    if (seamResolved < mid - dead) onBandSideChange('design');
+    else if (seamResolved > mid + dead) onBandSideChange('software');
+    else onBandSideChange(null);
+  }, [
+    onBandSideChange,
+    designBandVisible,
+    scrollMorph,
+    morphUnlocked,
+    maxRevealPx,
+    seamResolved,
+  ]);
 
   const expandFromX = useCallback(() => {
     if (scrollMorph) return;
