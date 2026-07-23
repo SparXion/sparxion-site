@@ -19,8 +19,19 @@ function getScrollTop(): number {
 }
 
 const CONTACT_OVERLAY_DELAY_MS = 7_000;
+const CONTACT_OVERLAY_DELAY_MOBILE_MS = 1_800;
 /** Scroll arrow after the brand equation has had a beat on screen. */
 const SCROLL_CUE_AFTER_TAGLINE_MS = 1_400;
+/** Artboard Y for the equation under the smash mark (1920×1080). */
+const EQUATION_ARTBOARD_Y = 860 / 1080;
+/** Fade the chevron before the equation overlaps it. */
+const CUE_CLEARANCE_PX = 28;
+/**
+ * When LandingHero’s sticky owns the screen (top = 0), equation sits this far
+ * above the viewport — “just off the page.” Work backward: equationTop =
+ * stickyTop − eqH − gap, so motion stays 1:1 with scroll (no ease/accel).
+ */
+const EQUATION_OFF_PAGE_GAP_PX = 28;
 
 export function HomePage() {
   const [searchParams] = useSearchParams();
@@ -28,14 +39,17 @@ export function HomePage() {
     searchParams.get('unified') === '1' || searchParams.get('unified') === 'true';
 
   const [scrollCueVisible, setScrollCueVisible] = useState(false);
+  const [scrollCueAllowed, setScrollCueAllowed] = useState(false);
   const [taglineVisible, setTaglineVisible] = useState(false);
-  const [bandExploreSide, setBandExploreSide] = useState<'design' | 'software' | null>(
-    null,
-  );
   const [morphProgress, setMorphProgress] = useState(0);
   const [morphSettled, setMorphSettled] = useState(false);
   const [contactReady, setContactReady] = useState(false);
+  const [equationTopPx, setEquationTopPx] = useState(0);
   const morphTrackRef = useRef<HTMLElement>(null);
+  const morphStickyRef = useRef<HTMLDivElement>(null);
+  const frameRef = useRef<HTMLDivElement>(null);
+  const equationRef = useRef<HTMLParagraphElement>(null);
+  const cueRef = useRef<HTMLButtonElement>(null);
   const reduceMotionRef = useRef(false);
   /** Hold morph at complete through sticky end bounce; clear when scrolling back into the track. */
   const morphCompleteLatchedRef = useRef(false);
@@ -52,25 +66,74 @@ export function HomePage() {
       window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   }, []);
 
-  /** Contact overlay: 7s after the band stage settles — stays put while the X slides. */
+  /** Contact overlay: sooner on touch/narrow — band stage needs an immediate exit. */
   useEffect(() => {
     if (!morphSettled) {
       setContactReady(false);
       return;
     }
-    const id = window.setTimeout(() => setContactReady(true), CONTACT_OVERLAY_DELAY_MS);
+    const mobile =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(hover: none), (pointer: coarse), (max-width: 720px)').matches;
+    const delay = mobile ? CONTACT_OVERLAY_DELAY_MOBILE_MS : CONTACT_OVERLAY_DELAY_MS;
+    const id = window.setTimeout(() => setContactReady(true), delay);
     return () => window.clearTimeout(id);
   }, [morphSettled]);
 
-  /** Equation first; bouncing arrow follows after a short beat. */
+  /** Equation first; bouncing arrow follows after a short beat (unless scroll already dismissed it). */
   useEffect(() => {
     if (!taglineVisible) {
+      setScrollCueAllowed(false);
       setScrollCueVisible(false);
       return;
     }
-    const id = window.setTimeout(() => setScrollCueVisible(true), SCROLL_CUE_AFTER_TAGLINE_MS);
+    const id = window.setTimeout(() => setScrollCueAllowed(true), SCROLL_CUE_AFTER_TAGLINE_MS);
     return () => window.clearTimeout(id);
   }, [taglineVisible]);
+
+  /**
+   * Equation motion — work backward from the docked LandingHero:
+   *  • Under the smash mark while that page is in view
+   *  • Hold mid-viewport through the white bridge (don’t scroll over the logo)
+   *  • Then lock to stickyTop − eqH − gap so when LandingHero owns the screen
+   *    the equation is just off-page, moving at constant scroll pace
+   */
+  const updateEquationLayout = useCallback(() => {
+    const frame = frameRef.current;
+    if (!frame) return;
+
+    const eq = equationRef.current;
+    const eqH = eq?.offsetHeight ?? 28;
+    const vh = window.innerHeight;
+    const centerTop = (vh - eqH) / 2;
+
+    const fr = frame.getBoundingClientRect();
+    const naturalTop = fr.top + fr.height * EQUATION_ARTBOARD_Y;
+    /* Persist at center once the smash slot would rise past mid-screen. */
+    const held = naturalTop < centerTop ? centerTop : naturalTop;
+
+    const sticky = morphStickyRef.current;
+    const stickyTop = sticky?.getBoundingClientRect().top ?? vh;
+    /*
+     * Fixed offset from the sticky page: at stickyTop = 0 → just above the fold.
+     * min(held, linked) hands off without a jump when the rising page “picks up”
+     * the centered equation and carries it off at 1:1 scroll speed.
+     */
+    const linked = stickyTop - eqH - EQUATION_OFF_PAGE_GAP_PX;
+    const top = Math.min(held, linked);
+    setEquationTopPx(top);
+
+    const cue = cueRef.current;
+    if (!cue || !eq || !scrollCueAllowed) {
+      setScrollCueVisible(false);
+      return;
+    }
+    const eqBottom = top + eqH;
+    const cueTop = cue.getBoundingClientRect().top;
+    const clearOfCue = eqBottom < cueTop - CUE_CLEARANCE_PX;
+    const stillInHero = fr.bottom > vh * 0.35 && top > vh * 0.2;
+    setScrollCueVisible(clearOfCue && stillInHero);
+  }, [scrollCueAllowed]);
 
   const updateMorphProgress = useCallback(() => {
     const track = morphTrackRef.current;
@@ -114,19 +177,40 @@ export function HomePage() {
   }, [morphSettled]);
 
   useEffect(() => {
-    updateMorphProgress();
-    const opts: AddEventListenerOptions = { passive: true };
-    window.addEventListener('scroll', updateMorphProgress, opts);
-    document.addEventListener('scroll', updateMorphProgress, opts);
-    document.body.addEventListener('scroll', updateMorphProgress, opts);
-    window.addEventListener('resize', updateMorphProgress);
-    return () => {
-      window.removeEventListener('scroll', updateMorphProgress);
-      document.removeEventListener('scroll', updateMorphProgress);
-      document.body.removeEventListener('scroll', updateMorphProgress);
-      window.removeEventListener('resize', updateMorphProgress);
+    const tick = () => {
+      updateMorphProgress();
+      updateEquationLayout();
     };
-  }, [updateMorphProgress]);
+    tick();
+    const opts: AddEventListenerOptions = { passive: true };
+    window.addEventListener('scroll', tick, opts);
+    document.addEventListener('scroll', tick, opts);
+    document.body.addEventListener('scroll', tick, opts);
+    window.addEventListener('resize', tick);
+    return () => {
+      window.removeEventListener('scroll', tick);
+      document.removeEventListener('scroll', tick);
+      document.body.removeEventListener('scroll', tick);
+      window.removeEventListener('resize', tick);
+    };
+  }, [updateMorphProgress, updateEquationLayout]);
+
+  useLayoutEffect(() => {
+    updateEquationLayout();
+  }, [taglineVisible, morphSettled, updateEquationLayout]);
+
+  /** Nav appears with the arrow; smash hides only after the arrow has left. */
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.toggle('home-nav-visible', scrollCueVisible);
+    root.classList.toggle(
+      'home-smash-hidden',
+      scrollCueAllowed && !scrollCueVisible,
+    );
+    return () => {
+      root.classList.remove('home-nav-visible', 'home-smash-hidden');
+    };
+  }, [scrollCueAllowed, scrollCueVisible]);
 
   const scrollToMorph = () => {
     morphTrackRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -141,31 +225,29 @@ export function HomePage() {
       }}
     >
       <section className="home-hero" aria-label="Welcome">
-        <video
-          className="home-hero__media"
-          autoPlay
-          muted
-          playsInline
-          poster="/brand/SparXion_Logo_Smash_poster.jpg"
-          aria-hidden="true"
-          onEnded={() => setTaglineVisible(true)}
-        >
-          <source src="/brand/SparXion_Logo_Smash.mp4" type="video/mp4" />
-        </video>
+        {/*
+          16:9 stage matches object-fit:contain of the smash — equation tracks this
+          frame in viewport space, then pins at the top into the band stage.
+        */}
+        <div className="home-hero__stage">
+          <div className="home-hero__frame" ref={frameRef}>
+            <video
+              className="home-hero__media"
+              autoPlay
+              muted
+              playsInline
+              poster="/brand/SparXion_Logo_Smash_poster.jpg"
+              aria-hidden="true"
+              onEnded={() => setTaglineVisible(true)}
+            >
+              <source src="/brand/SparXion_Logo_Smash.mp4" type="video/mp4" />
+            </video>
+          </div>
+        </div>
         <div className="home-hero__veil" aria-hidden="true" />
 
-        <p
-          className={[
-            'home-brand-phrase',
-            taglineVisible ? 'home-brand-phrase--visible' : '',
-          ]
-            .filter(Boolean)
-            .join(' ')}
-        >
-          Spark × Action = Discovery
-        </p>
-
         <button
+          ref={cueRef}
           type="button"
           className={[
             'home-scroll-cue',
@@ -180,6 +262,9 @@ export function HomePage() {
         </button>
       </section>
 
+      {/* White runway — gives the equation time to hold center before LandingHero docks. */}
+      <div className="home-bridge" aria-hidden="true" />
+
       <section
         ref={morphTrackRef}
         id="work"
@@ -189,27 +274,11 @@ export function HomePage() {
         aria-label="Explore the work"
         data-morph-progress={morphProgress.toFixed(3)}
       >
-        <div className="home-morph__sticky">
+        <div className="home-morph__sticky" ref={morphStickyRef}>
           <LandingHero
             useUnifiedBand={useUnifiedBand}
             morphProgress={morphProgress}
-            onBandSideChange={setBandExploreSide}
           />
-          <p
-            className={[
-              'home-brand-phrase',
-              bandExploreSide ? 'home-brand-phrase--visible' : '',
-            ]
-              .filter(Boolean)
-              .join(' ')}
-            aria-live="polite"
-          >
-            {bandExploreSide === 'design'
-              ? 'explore product design'
-              : bandExploreSide === 'software'
-                ? 'explore software design'
-                : '\u00a0'}
-          </p>
           <Link
             to="/contact"
             className={[
@@ -226,6 +295,21 @@ export function HomePage() {
           <p className="home-morph__copy">© {new Date().getFullYear()} SparXion</p>
         </div>
       </section>
+
+      <p
+        ref={equationRef}
+        className={[
+          'home-brand-phrase',
+          'home-brand-phrase--scroll',
+          taglineVisible ? 'home-brand-phrase--visible' : '',
+        ]
+          .filter(Boolean)
+          .join(' ')}
+        style={{ top: equationTopPx }}
+        aria-hidden={!taglineVisible}
+      >
+        Spark × Action = Discovery
+      </p>
     </div>
   );
 }

@@ -100,32 +100,26 @@
   z-index: 40;
 }
 
-/* Home: floats over the white-plate video, then sticks as a solid white bar. */
-.site-nav--home.site-nav--home-scrolled {
-  background: #fff;
-  border-bottom-color: #000;
-}
-
-.site-nav--home.site-nav--band-hidden {
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(-100%);
-  background: transparent;
-  border-bottom-color: transparent;
-}
-
+/* Home: floats over the smash — never a bottom rule. Hidden until the arrow appears. */
 .site-nav--home {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   background: transparent;
-  border-bottom-color: transparent;
+  border-bottom: none;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-100%);
   transition:
-    background-color 220ms ease,
-    border-bottom-color 220ms ease,
-    opacity 280ms ease,
-    transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+    opacity 700ms ease,
+    transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+html.home-nav-visible .site-nav--home {
+  opacity: 1;
+  pointer-events: auto;
+  transform: none;
 }
 
 .site-nav__inner {
@@ -198,21 +192,22 @@
   min-height: 100vh;
   min-height: 100dvh;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
   overflow: hidden;
   color: var(--sx-ink);
   background: #fff;
 }
 
-.home-hero__media {
+/* Centers the 16:9 smash plate the same way object-fit:contain would. */
+.home-hero__stage {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  object-position: center center;
-  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  transition: opacity 700ms ease;
 }
 
 .home-hero__veil {
@@ -227,9 +222,44 @@
       rgba(255, 255, 255, 0.2) 100%
     );
   pointer-events: none;
+  transition: opacity 700ms ease;
 }
 
-/* Brand equation / explore phrases — same lockup under the mark. */
+/* Smash leaves with the scroll cue after it has appeared; nav uses `home-nav-visible`. */
+html.home-smash-hidden .home-hero__stage,
+html.home-smash-hidden .home-hero__veil {
+  opacity: 0;
+}
+
+.home-hero__frame {
+  position: relative;
+  width: min(100%, calc(100dvh * 1920 / 1080));
+  aspect-ratio: 1920 / 1080;
+  max-height: 100%;
+}
+
+.home-hero__media {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center center;
+  background: #fff;
+  pointer-events: none;
+}
+
+/*
+ * Brand / explore phrases — locked to the 1920×1080 artboard (same plate as
+ * object-fit:contain), not a raw viewport %.
+ *
+ * Geometry (artboard units):
+ *   smash video ink / soft floor ≈ 680
+ *   band strip bottom             = 408.8 + 296 ≈ 705
+ *   large X tip                   ≈ 732
+ * Phrase top at 860 clears the X legs with air, sits under the band, and
+ * leaves room above the Contact chrome (pinned near the sticky bottom).
+ */
 .home-brand-phrase {
   position: absolute;
   left: 50%;
@@ -237,7 +267,7 @@
   z-index: 2;
   transform: translate(-50%, 0);
   margin: 0;
-  max-width: min(92vw, 36rem);
+  max-width: min(92%, 36rem);
   padding: 0 1rem;
   text-align: center;
   font-family: 'Exo 2', sans-serif;
@@ -251,14 +281,101 @@
   transition: opacity 900ms ease, transform 900ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+.home-brand-phrase--artboard {
+  top: calc(100% * 860 / 1080);
+}
+
+/* Scroll-linked equation: smash → hold center → 1:1 with LandingHero sticky off-page. */
+.home-brand-phrase--scroll {
+  position: fixed;
+  left: 50%;
+  z-index: 32;
+  top: 0;
+  max-width: min(92vw, 36rem);
+  will-change: top;
+}
+
 .home-brand-phrase--visible {
   opacity: 1;
   transform: translate(-50%, 0.15rem);
 }
 
-/* Band-stage explore line sits above Contact; keep below the overlay X. */
-.home-morph__sticky .home-brand-phrase {
-  z-index: 28;
+/* Above HTML bands; under overlay X so legs still read over the line at rest. */
+.landing-hero-css-root .home-brand-phrase {
+  z-index: 45;
+}
+
+/*
+ * Band explore line: “explore” stays put, then eases left as the category
+ * reveals beside it (width + fade) — not a hard string swap.
+ */
+.home-explore-line {
+  position: absolute;
+  left: 50%;
+  z-index: 45;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  width: max-content;
+  max-width: min(94%, 42rem);
+  margin: 0;
+  padding: 0 1rem;
+  transform: translate(-50%, 0);
+  font-family: 'Exo 2', sans-serif;
+  font-weight: 500;
+  font-size: clamp(0.95rem, 2.4vw, 1.35rem);
+  letter-spacing: 0.04em;
+  line-height: 1.25;
+  color: #360c5e;
+  opacity: 0;
+  pointer-events: none;
+  white-space: nowrap;
+  transition:
+    opacity 700ms ease,
+    transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.home-explore-line--visible {
+  opacity: 1;
+  transform: translate(-50%, 0.15rem);
+}
+
+.home-explore-line__lead {
+  flex: 0 0 auto;
+}
+
+.home-explore-line__tail {
+  display: inline-grid;
+  grid-template-columns: 0fr;
+  opacity: 0;
+  overflow: hidden;
+  transition:
+    grid-template-columns 620ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 480ms ease 60ms;
+}
+
+.home-explore-line--expanded .home-explore-line__tail {
+  grid-template-columns: 1fr;
+  opacity: 1;
+}
+
+.home-explore-line__category {
+  min-width: 0;
+  overflow: hidden;
+  padding-left: 0.35em;
+  white-space: nowrap;
+  animation: home-explore-category-in 480ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes home-explore-category-in {
+  from {
+    opacity: 0;
+    transform: translateX(0.45em);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -268,6 +385,22 @@
 
   .home-brand-phrase--visible {
     transform: translate(-50%, 0);
+  }
+
+  .home-explore-line {
+    transition: opacity 200ms ease;
+  }
+
+  .home-explore-line--visible {
+    transform: translate(-50%, 0);
+  }
+
+  .home-explore-line__tail {
+    transition: none;
+  }
+
+  .home-explore-line__category {
+    animation: none;
   }
 }
 
@@ -340,6 +473,17 @@
   }
 }
 
+/*
+ * White bridge between smash and LandingHero — stretch so the equation can
+ * hold mid-viewport before the next page docks (and before X grow).
+ */
+.home-bridge {
+  height: 70vh;
+  height: 70dvh;
+  background: #fff;
+  pointer-events: none;
+}
+
 /* Scroll-morph track: sticky LandingHero scrubbed by vertical scroll */
 .home-morph {
   position: relative;
@@ -387,11 +531,12 @@
   user-select: none;
 }
 
-/* Contact CTA — viewport overlay under the X; does not move with band reveal. */
+/* Contact CTA — sticky chrome under the artboard phrase; does not track the X. */
 .home-contact-overlay {
   position: absolute;
   left: 50%;
-  top: 72%;
+  top: auto;
+  bottom: 4.25rem;
   z-index: 30;
   transform: translate(-50%, 0);
   font-family: 'Figtree', sans-serif;
@@ -970,10 +1115,17 @@
   .site-nav__inner {
     flex-direction: row;
     align-items: center;
+    padding: 10px 14px;
+    padding-top: max(10px, env(safe-area-inset-top));
   }
 
   .site-nav__links {
     justify-content: flex-end;
+    gap: 0.85rem;
+  }
+
+  .site-nav__link {
+    font-size: 0.9rem;
   }
 
   .home-hero__content {
@@ -987,5 +1139,51 @@
 
   .home-hero__ctas {
     justify-content: flex-start;
+  }
+
+  /* Shorter scrub runway — less sticky fighting on iOS. */
+  .home-morph {
+    height: 160vh;
+  }
+
+  .home-bridge {
+    height: 55vh;
+    height: 55dvh;
+  }
+
+  .home-morph__sticky {
+    padding: 0 0.35rem;
+  }
+
+  .home-brand-phrase {
+    font-size: clamp(0.85rem, 3.6vw, 1.15rem);
+    max-width: min(94%, 22rem);
+    padding: 0 0.75rem;
+  }
+
+  .home-explore-line {
+    font-size: clamp(0.85rem, 3.6vw, 1.15rem);
+    max-width: min(94%, 22rem);
+    padding: 0 0.75rem;
+  }
+
+  .home-brand-phrase--artboard {
+    top: calc(100% * 880 / 1080);
+  }
+
+  .home-scroll-cue {
+    bottom: max(1.25rem, calc(0.5rem + env(safe-area-inset-bottom)));
+    width: 3rem;
+    height: 3rem;
+  }
+
+  .home-contact-overlay {
+    bottom: max(3.5rem, calc(2.75rem + env(safe-area-inset-bottom)));
+    font-size: 0.875rem;
+    padding: 0.55rem 1.15rem;
+  }
+
+  .home-morph__copy {
+    bottom: max(0.65rem, env(safe-area-inset-bottom));
   }
 }

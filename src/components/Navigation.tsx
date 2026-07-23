@@ -5,50 +5,26 @@ import { SparXionNavLogo } from './SparXionNavLogo';
 export function Navigation() {
   const location = useLocation();
   const isHomePage = location.pathname === '/';
-  /** Home: transparent over the video, solid white once the video leaves the viewport. */
-  const [overHero, setOverHero] = useState(true);
-  /** Hide chrome while the scroll-morph / band stage owns the screen. */
-  const [inBandStage, setInBandStage] = useState(false);
+  /** Home: show only while the scroll cue is visible (`html.home-nav-visible`). */
+  const [homeNavVisible, setHomeNavVisible] = useState(false);
 
   useEffect(() => {
     if (!isHomePage) {
-      setOverHero(false);
-      setInBandStage(false);
+      setHomeNavVisible(true);
       return;
     }
-    const hero = document.querySelector('.home-hero');
-    if (!hero) {
-      setOverHero(true);
-      return;
-    }
-    const io = new IntersectionObserver(
-      ([entry]) => setOverHero(Boolean(entry?.isIntersecting)),
-      { root: null, threshold: 0.12 },
-    );
-    io.observe(hero);
-    return () => io.disconnect();
-  }, [isHomePage, location.hash]);
-
-  useEffect(() => {
-    if (!isHomePage) {
-      setInBandStage(false);
-      return;
-    }
-    const morph = document.querySelector('.home-morph');
-    if (!morph) {
-      setInBandStage(false);
-      return;
-    }
-    const io = new IntersectionObserver(
-      ([entry]) => {
-        setInBandStage(
-          Boolean(entry?.isIntersecting && entry.intersectionRatio >= 0.35),
-        );
-      },
-      { root: null, threshold: [0, 0.35, 0.6, 1] },
-    );
-    io.observe(morph);
-    return () => io.disconnect();
+    const sync = () => {
+      setHomeNavVisible(
+        document.documentElement.classList.contains('home-nav-visible'),
+      );
+    };
+    sync();
+    const obs = new MutationObserver(sync);
+    obs.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    });
+    return () => obs.disconnect();
   }, [isHomePage, location.hash]);
 
   const navItems = [
@@ -57,27 +33,22 @@ export function Navigation() {
     { label: 'Contact', path: '/contact' },
   ];
 
-  const hideForBand = isHomePage && inBandStage;
+  const hideHomeNav = isHomePage && !homeNavVisible;
 
   return (
     <nav
-      className={[
-        'site-nav',
-        isHomePage ? 'site-nav--home' : '',
-        isHomePage && !overHero ? 'site-nav--home-scrolled' : '',
-        hideForBand ? 'site-nav--band-hidden' : '',
-      ]
+      className={['site-nav', isHomePage ? 'site-nav--home' : '']
         .filter(Boolean)
         .join(' ')}
       aria-label="Primary"
-      aria-hidden={hideForBand ? true : undefined}
+      aria-hidden={hideHomeNav ? true : undefined}
     >
       <div className="site-nav__inner">
         <Link
           to="/"
           className="site-nav__logo"
           aria-label="SparXion home"
-          tabIndex={hideForBand ? -1 : undefined}
+          tabIndex={hideHomeNav ? -1 : undefined}
         >
           <SparXionNavLogo className="site-nav__logo-mark--ink" />
         </Link>
@@ -86,7 +57,7 @@ export function Navigation() {
             <Link
               key={item.path}
               to={item.path}
-              tabIndex={hideForBand ? -1 : undefined}
+              tabIndex={hideHomeNav ? -1 : undefined}
               className={
                 location.pathname === item.path ||
                 location.pathname.startsWith(`${item.path}/`)
