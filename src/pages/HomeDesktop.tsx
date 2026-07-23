@@ -252,14 +252,14 @@ export function HomeDesktop({ useUnifiedBand = false }: HomeDesktopProps) {
 
   const showMobileSplit = isMobileHome && morphSettled;
   /** Keep LandingHero until scroll starts the split so “full-size hero band” still reads. */
-  const showSplitUi = showMobileSplit && splitProgress > 0.04;
+  const showSplitUi = showMobileSplit && splitProgress > 0.03;
   const splitUiProgress = showSplitUi
-    ? clamp01((splitProgress - 0.04) / 0.96)
+    ? clamp01((splitProgress - 0.03) / 0.72)
     : 0;
   const contactVisible =
     morphSettled &&
     contactReady &&
-    (!isMobileHome || splitProgress > 0.55);
+    (!isMobileHome || splitProgress > 0.4);
 
   return (
     <div

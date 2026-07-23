@@ -1242,8 +1242,9 @@ html.home-smash-hidden .home-hero__veil {
   }
 
   .home-morph--settled.home-morph--mobile-split {
-    height: 240vh;
-    height: 240dvh;
+    /* Shorter runway — split reaches full size in fewer strokes. */
+    height: 145vh;
+    height: 145dvh;
   }
 
   .home-morph--settled .home-morph__sticky {
@@ -1287,7 +1288,8 @@ html.home-smash-hidden .home-hero__veil {
 
   .home-contact-overlay--split {
     top: auto;
-    bottom: max(1.1rem, calc(0.65rem + env(safe-area-inset-bottom)));
+    /* Clear air above the © line. */
+    bottom: max(3.75rem, calc(3.15rem + env(safe-area-inset-bottom)));
   }
 
   .home-contact-overlay:hover {
@@ -1357,34 +1359,44 @@ html.home-smash-hidden .home-hero__veil {
 
   .mobile-band-split__label {
     margin: 0;
-    padding: 0 0.25rem;
+    padding: 0 0.35rem;
     font-family: 'Exo 2', sans-serif;
     font-weight: 500;
-    font-size: 0.72rem;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
+    font-size: clamp(0.78rem, 3.2vw, 0.95rem);
+    letter-spacing: 0.04em;
+    text-transform: none;
     color: #360c5e;
     text-align: center;
     pointer-events: none;
     user-select: none;
+    white-space: nowrap;
   }
 
   .mobile-band-split__rail--product .mobile-band-split__label {
     order: -1;
   }
 
+  /*
+   * Hero-scale X: cropped mark fills this box. Sized to read as the landing
+   * mark while leaving a clear gap from the product / software rails.
+   */
   .mobile-band-split__x {
     position: absolute;
     left: 50%;
     top: 50%;
     z-index: 25;
-    width: min(28vw, 7.5rem);
-    height: min(28vw, 7.5rem);
+    width: min(58vw, 26dvh);
+    height: min(58vw, 26dvh);
+    transform: translate(-50%, -50%);
     pointer-events: none;
-    will-change: transform, opacity;
   }
 
-  .mobile-band-split__x svg {
+  .mobile-band-split__x-mark {
+    width: 100%;
+    height: 100%;
+  }
+
+  .mobile-band-split__x-mark svg {
     display: block;
     width: 100%;
     height: 100%;

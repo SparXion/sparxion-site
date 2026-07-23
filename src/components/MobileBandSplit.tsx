@@ -18,6 +18,12 @@ function clamp01(n: number): number {
   return Math.min(1, Math.max(0, n));
 }
 
+/** Crop the 1920×1080 plate so the mark fills its box (same paths as hero). */
+const X_MARK_SPLIT_SVG = xMarkLargeSvg.replace(
+  /viewBox="0 0 1920 1080"/,
+  'viewBox="740 185 520 560"',
+);
+
 export type MobileBandSplitProps = {
   /** 0 = bands stacked at mid-screen (hero-band scale); 1 = top/bottom halves. */
   progress: number;
@@ -30,6 +36,8 @@ export type MobileBandSplitProps = {
 export function MobileBandSplit({ progress }: MobileBandSplitProps) {
   const navigate = useNavigate();
   const p = clamp01(progress);
+  /** Front-load growth / separation so full size arrives in fewer strokes. */
+  const ease = 1 - (1 - p) ** 2.6;
 
   const designItems = useMemo(
     () =>
@@ -56,20 +64,19 @@ export function MobileBandSplit({ progress }: MobileBandSplitProps) {
   );
 
   /*
-   * Vertical centers: slight gap at start → top-half / bottom-half mid.
-   * Band height: compact strip → taller rails as they separate.
+   * Vertical centers: open a clear mid gap for the hero-scale X, then park
+   * rails in each half. Band height eases to full size early in the scroll.
    */
-  const productTop = `calc(${42 - 17 * p}%)`;
-  const softwareTop = `calc(${58 + 17 * p}%)`;
-  const bandHeight = `calc(${11 + 11 * p}dvh)`;
-  const bandWidth = `calc(${92 + 6 * p}vw)`;
-  const xScale = 0.38 + 0.1 * (1 - p);
-  const gapOpacity = 0.25 + 0.75 * p;
+  const productTop = `calc(${40 - 15 * ease}%)`;
+  const softwareTop = `calc(${60 + 15 * ease}%)`;
+  const bandHeight = `calc(${12 + 10 * ease}dvh)`;
+  const bandWidth = `calc(${94 + 4 * ease}vw)`;
+  const labelOpacity = 0.35 + 0.65 * ease;
 
   return (
     <div
       className="mobile-band-split"
-      style={{ ['--split' as string]: String(p) }}
+      style={{ ['--split' as string]: String(ease) }}
       aria-label="Explore product and software work"
     >
       <div
@@ -80,8 +87,8 @@ export function MobileBandSplit({ progress }: MobileBandSplitProps) {
           height: bandHeight,
         }}
       >
-        <p className="mobile-band-split__label" style={{ opacity: gapOpacity }}>
-          Product
+        <p className="mobile-band-split__label" style={{ opacity: labelOpacity }}>
+          discover product design
         </p>
         <div className="mobile-band-split__strip">
           <BandStrip
@@ -96,15 +103,12 @@ export function MobileBandSplit({ progress }: MobileBandSplitProps) {
         </div>
       </div>
 
-      <div
-        className="mobile-band-split__x"
-        style={{
-          transform: `translate(-50%, -50%) scale(${xScale})`,
-          opacity: 0.55 + 0.45 * p,
-        }}
-        aria-hidden
-        dangerouslySetInnerHTML={{ __html: xMarkLargeSvg }}
-      />
+      <div className="mobile-band-split__x" aria-hidden>
+        <div
+          className="mobile-band-split__x-mark"
+          dangerouslySetInnerHTML={{ __html: X_MARK_SPLIT_SVG }}
+        />
+      </div>
 
       <div
         className="mobile-band-split__rail mobile-band-split__rail--software"
@@ -125,8 +129,8 @@ export function MobileBandSplit({ progress }: MobileBandSplitProps) {
             }}
           />
         </div>
-        <p className="mobile-band-split__label" style={{ opacity: gapOpacity }}>
-          Software
+        <p className="mobile-band-split__label" style={{ opacity: labelOpacity }}>
+          discover software design
         </p>
       </div>
     </div>
