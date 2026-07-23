@@ -74,7 +74,7 @@ export function SoftwareProjectPage() {
           ← Back
         </button>
 
-        <div className="mb-large rounded-card overflow-hidden border border-border-gray">
+        <div className="mb-large overflow-hidden">
           <img
             src={bandSrc}
             alt=""

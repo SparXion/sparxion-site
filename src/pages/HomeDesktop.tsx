@@ -1,7 +1,13 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigationType, NavigationType } from 'react-router-dom';
 import { LandingHero } from '../components/LandingHero';
 import { MobileBandSplit } from '../components/MobileBandSplit';
+import {
+  clearLandingHomeScrollY,
+  consumeLandingPendingDesignTileNav,
+  consumeLandingPendingSoftwareTileNav,
+  readLandingHomeScrollY,
+} from '../lib/landingSession';
 import { UNIFIED_BAND_PAGE_WIDTH_CSS } from '../lib/unifiedBandLayout';
 
 function clamp01(n: number): number {
@@ -51,6 +57,8 @@ export function HomeDesktop({ useUnifiedBand = false }: HomeDesktopProps) {
   const [isMobileHome, setIsMobileHome] = useState(false);
   const [contactReady, setContactReady] = useState(false);
   const [equationTopPx, setEquationTopPx] = useState(0);
+  /** Returning from a tile — skip smash/morph and restore the band viewport. */
+  const [restoreFromTile, setRestoreFromTile] = useState(false);
   const morphTrackRef = useRef<HTMLElement>(null);
   const morphStickyRef = useRef<HTMLDivElement>(null);
   const frameRef = useRef<HTMLDivElement>(null);
@@ -60,12 +68,33 @@ export function HomeDesktop({ useUnifiedBand = false }: HomeDesktopProps) {
   /** Hold morph at complete through sticky end bounce; clear when scrolling back into the track. */
   const morphCompleteLatchedRef = useRef(false);
   const isMobileHomeRef = useRef(false);
+  const pendingScrollYRef = useRef<number | null>(null);
+  const navigationType = useNavigationType();
 
   useEffect(() => {
     reduceMotionRef.current =
       typeof window !== 'undefined' &&
       window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   }, []);
+
+  /** Back from a tile: jump straight to the settled band stage + saved scroll. */
+  useLayoutEffect(() => {
+    if (navigationType !== NavigationType.Pop) return;
+    const fromDesign = consumeLandingPendingDesignTileNav();
+    const fromSoftware = consumeLandingPendingSoftwareTileNav();
+    if (!fromDesign && !fromSoftware) return;
+
+    const scrollY = readLandingHomeScrollY();
+    pendingScrollYRef.current = typeof scrollY === 'number' ? scrollY : null;
+
+    morphCompleteLatchedRef.current = true;
+    setRestoreFromTile(true);
+    setMorphProgress(1);
+    setMorphSettled(true);
+    setTaglineVisible(true);
+    setScrollCueAllowed(false);
+    setScrollCueVisible(false);
+  }, [navigationType]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -182,9 +211,30 @@ export function HomeDesktop({ useUnifiedBand = false }: HomeDesktopProps) {
     if (!morphSettled) return;
     const track = morphTrackRef.current;
     if (!track) return;
+
+    const restoredY = pendingScrollYRef.current;
+    if (typeof restoredY === 'number') {
+      pendingScrollYRef.current = null;
+      clearLandingHomeScrollY();
+      const se = document.scrollingElement;
+      if (se) se.scrollTop = restoredY;
+      window.scrollTo(0, restoredY);
+      if (isMobileHomeRef.current) {
+        const scrollable = Math.max(1, track.offsetHeight - window.innerHeight);
+        const raw = clamp01((restoredY - track.offsetTop) / scrollable);
+        setSplitProgress(raw);
+      }
+      return;
+    }
+
+    if (restoreFromTile) {
+      window.scrollTo(0, track.offsetTop);
+      return;
+    }
+
     /** Dock sticky at the morph-complete scroll; mobile can continue into split. */
     window.scrollTo(0, track.offsetTop);
-  }, [morphSettled]);
+  }, [morphSettled, restoreFromTile]);
 
   /** Desktop settled dock: band stays mid-viewport — no scrolling past it. */
   useEffect(() => {
@@ -236,6 +286,12 @@ export function HomeDesktop({ useUnifiedBand = false }: HomeDesktopProps) {
 
   useEffect(() => {
     const root = document.documentElement;
+    if (restoreFromTile) {
+      root.classList.add('home-nav-visible', 'home-smash-hidden');
+      return () => {
+        root.classList.remove('home-nav-visible', 'home-smash-hidden');
+      };
+    }
     root.classList.toggle('home-nav-visible', scrollCueVisible);
     root.classList.toggle(
       'home-smash-hidden',
@@ -244,7 +300,7 @@ export function HomeDesktop({ useUnifiedBand = false }: HomeDesktopProps) {
     return () => {
       root.classList.remove('home-nav-visible', 'home-smash-hidden');
     };
-  }, [scrollCueAllowed, scrollCueVisible]);
+  }, [scrollCueAllowed, scrollCueVisible, restoreFromTile]);
 
   const scrollToMorph = () => {
     morphTrackRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -274,7 +330,7 @@ export function HomeDesktop({ useUnifiedBand = false }: HomeDesktopProps) {
           <div className="home-hero__frame" ref={frameRef}>
             <video
               className="home-hero__media"
-              autoPlay
+              autoPlay={!restoreFromTile}
               muted
               playsInline
               poster="/brand/SparXion_Logo_Smash_poster.jpg"
@@ -326,6 +382,7 @@ export function HomeDesktop({ useUnifiedBand = false }: HomeDesktopProps) {
             <LandingHero
               useUnifiedBand={useUnifiedBand}
               morphProgress={morphProgress}
+              restoreFromTile={restoreFromTile}
             />
           )}
           <Link

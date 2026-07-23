@@ -4,10 +4,7 @@ import xMarkLargeSvg from '../assets/brand/sparxion-graphics/graphics-svg/x-mark
 import { buildLandingHeroSvg } from '../lib/buildLandingHeroSvg';
 import {
   clearLandingSession,
-  consumeLandingPendingDesignTileNav,
-  consumeLandingPendingSoftwareTileNav,
   readLandingBandScrollPersisted,
-  readLandingExpandedPersisted,
   writeLandingBandScrollPersisted,
   writeLandingExpandedPersisted,
 } from '../lib/landingSession';
@@ -49,6 +46,8 @@ export type LandingHeroProps = {
   morphProgress?: number;
   /** Mobile home: open a band once the large X / seams are ready. */
   openBandSide?: 'design' | 'software' | null;
+  /** Back from a tile — skip morph scrub and restore the expanded band stage. */
+  restoreFromTile?: boolean;
 };
 
 type HeroWheelState =
@@ -451,6 +450,7 @@ export function LandingHero({
   useUnifiedBand = false,
   morphProgress,
   openBandSide = null,
+  restoreFromTile = false,
 }: LandingHeroProps) {
   const scrollMorph = typeof morphProgress === 'number';
   const navigate = useNavigate();
@@ -469,25 +469,6 @@ export function LandingHero({
   }, [seamPx, maxRevealPx]);
 
   const landingHeroSvg = useMemo(() => buildLandingHeroSvg(), []);
-
-  useLayoutEffect(() => {
-    if (navigationType === NavigationType.Push || navigationType === NavigationType.Replace) {
-      clearLandingSession();
-      return;
-    }
-    if (navigationType !== NavigationType.Pop) return;
-    const fromDesign = consumeLandingPendingDesignTileNav();
-    const fromSoftware = consumeLandingPendingSoftwareTileNav();
-    if (!fromDesign && !fromSoftware) return;
-    if (!readLandingExpandedPersisted()) return;
-    setExpanded(true);
-    setLandingRestored(true);
-    setBandRestoreScroll(readLandingBandScrollPersisted());
-  }, [navigationType]);
-
-  useEffect(() => {
-    writeLandingExpandedPersisted(expanded);
-  }, [expanded]);
 
   const [xHover, setXHover] = useState(false);
   const [bandsRevealed, setBandsRevealed] = useState(false);
@@ -518,6 +499,28 @@ export function LandingHero({
   const [unifiedExploreSide, setUnifiedExploreSide] = useState<
     'design' | 'software' | null
   >(null);
+
+  useLayoutEffect(() => {
+    if (navigationType === NavigationType.Push || navigationType === NavigationType.Replace) {
+      if (!restoreFromTile) clearLandingSession();
+      return;
+    }
+  }, [navigationType, restoreFromTile]);
+
+  /** Parent detected Back-from-tile — restore expanded band + strip offset. */
+  useLayoutEffect(() => {
+    if (!restoreFromTile) return;
+    setExpanded(true);
+    setLandingRestored(true);
+    setBandsRevealed(true);
+    setMorphUnlocked(true);
+    setMorphXReady(true);
+    setBandRestoreScroll(readLandingBandScrollPersisted());
+  }, [restoreFromTile]);
+
+  useEffect(() => {
+    writeLandingExpandedPersisted(expanded);
+  }, [expanded]);
 
   /** Morph CSS only while scrubbing — after unlock, use the normal expanded hero path. */
   const morphScrubbing = scrollMorph && !morphUnlocked;
@@ -576,6 +579,20 @@ export function LandingHero({
   /** Scroll-morph: map progress → expand / grow / band reveal + CSS vars. */
   useLayoutEffect(() => {
     if (!scrollMorph || morphProgress == null) return;
+    if (landingRestored || restoreFromTile) {
+      setExpanded(true);
+      setBandsRevealed(true);
+      setMorphXReady(true);
+      setMorphUnlocked(true);
+      const root = hostRef.current;
+      if (root) {
+        root.style.removeProperty('--landing-morph-fade');
+        root.style.removeProperty('--landing-morph-grow');
+        root.style.removeProperty('--landing-morph-band');
+        root.classList.remove('landing-hero-css-root--morph-x-ready');
+      }
+      return;
+    }
     const t = Math.min(1, Math.max(0, morphProgress));
     /*
      * Sequence — X must fully cover the seam before any band paint:
@@ -621,7 +638,7 @@ export function LandingHero({
     root.style.removeProperty('--landing-morph-grow');
     root.style.removeProperty('--landing-morph-band');
     root.classList.remove('landing-hero-css-root--morph-x-ready');
-  }, [scrollMorph, morphProgress, maxRevealPx, morphUnlocked]);
+  }, [scrollMorph, morphProgress, maxRevealPx, morphUnlocked, landingRestored, restoreFromTile]);
 
   useLayoutEffect(() => {
     seamPxRef.current = seamResolved;

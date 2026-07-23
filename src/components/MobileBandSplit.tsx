@@ -1,10 +1,11 @@
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import xMarkLargeSvg from '../assets/brand/sparxion-graphics/graphics-svg/x-mark-large.svg?raw';
 import { DESIGN_BAND_PROJECT_IDS } from '../data/designBandProjectIds';
 import { getPortfolioItemById } from '../data/portfolio';
 import { softwareItems } from '../data/software';
 import {
+  readLandingBandScrollPersisted,
   writeLandingBandScrollPersisted,
   writeLandingPendingDesignTileNav,
   writeLandingPendingSoftwareTileNav,
@@ -12,7 +13,7 @@ import {
 import { portfolioBandImageHref } from '../lib/portfolioBandImageHref';
 import { navigateToSoftwareProject } from '../lib/ucidAppUrl';
 import { softwareImageUrl } from '../lib/softwareUrls';
-import { BandStrip } from './BandStrip';
+import { BandStrip, type BandStripHandle } from './BandStrip';
 
 function clamp01(n: number): number {
   return Math.min(1, Math.max(0, n));
@@ -38,6 +39,9 @@ export function MobileBandSplit({ progress }: MobileBandSplitProps) {
   const p = clamp01(progress);
   /** Front-load growth / separation so full size arrives in fewer strokes. */
   const ease = 1 - (1 - p) ** 2.6;
+  const productStripRef = useRef<BandStripHandle>(null);
+  const softwareStripRef = useRef<BandStripHandle>(null);
+  const restoreScrollLeft = useMemo(() => readLandingBandScrollPersisted(), []);
 
   const designItems = useMemo(
     () =>
@@ -92,11 +96,15 @@ export function MobileBandSplit({ progress }: MobileBandSplitProps) {
         </p>
         <div className="mobile-band-split__strip">
           <BandStrip
+            ref={productStripRef}
             ariaLabel="Product design band"
             items={designItems}
+            initialScrollLeft={restoreScrollLeft}
             onSelectProject={(projectId) => {
               writeLandingPendingDesignTileNav();
-              writeLandingBandScrollPersisted(0);
+              writeLandingBandScrollPersisted(
+                productStripRef.current?.getScrollLeft() ?? 0,
+              );
               navigate(`/portfolio/${encodeURIComponent(projectId)}`);
             }}
           />
@@ -120,11 +128,16 @@ export function MobileBandSplit({ progress }: MobileBandSplitProps) {
       >
         <div className="mobile-band-split__strip">
           <BandStrip
+            ref={softwareStripRef}
             ariaLabel="Software design band"
             items={softwareStripItems}
+            initialScrollLeft={restoreScrollLeft}
             tileAriaLabelPrefix="Open software"
             onSelectProject={(projectId) => {
               writeLandingPendingSoftwareTileNav();
+              writeLandingBandScrollPersisted(
+                softwareStripRef.current?.getScrollLeft() ?? 0,
+              );
               navigateToSoftwareProject(projectId, navigate);
             }}
           />

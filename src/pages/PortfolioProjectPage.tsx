@@ -30,8 +30,6 @@ export function PortfolioProjectPage() {
         <button
           type="button"
           onClick={() => {
-            // If we came from the band, go back to home (band restores via session)
-            // Otherwise go to the portfolio grid
             navigate(-1);
           }}
           className="inline-block text-small text-medium-gray hover:text-black mb-medium transition-standard bg-transparent border-0 p-0 cursor-pointer"
@@ -39,7 +37,7 @@ export function PortfolioProjectPage() {
           ← Back
         </button>
 
-        <div className="mb-large rounded-card overflow-hidden border border-border-gray">
+        <div className="mb-medium overflow-hidden">
           <img
             src={bandSrc}
             alt=""
@@ -47,6 +45,7 @@ export function PortfolioProjectPage() {
           />
         </div>
 
+        {/* Title block sits directly under the banner */}
         <header className="mb-large">
           <h1 className="text-h1 text-black mb-small">{item.title}</h1>
           <p className="text-body text-medium-gray mb-small">
@@ -58,8 +57,9 @@ export function PortfolioProjectPage() {
           ) : null}
         </header>
 
+        {/* Work images next */}
         {videoSrc ? (
-          <div className="mb-large rounded-card overflow-hidden border border-border-gray bg-black">
+          <div className="mb-large overflow-hidden bg-black">
             <video
               src={videoSrc}
               controls
@@ -70,6 +70,21 @@ export function PortfolioProjectPage() {
           </div>
         ) : null}
 
+        {item.images.length > 0 ? (
+          <div className="mb-large flex flex-col gap-medium">
+            {item.images.map((file) => (
+              <img
+                key={file}
+                src={portfolioImageUrl(item.id, file)}
+                alt=""
+                className="w-full"
+                loading="lazy"
+              />
+            ))}
+          </div>
+        ) : null}
+
+        {/* Long copy at the bottom */}
         <div className="mb-large">
           <p className="text-body text-dark-gray whitespace-pre-wrap">{item.story}</p>
         </div>
@@ -85,23 +100,11 @@ export function PortfolioProjectPage() {
           </div>
         ) : null}
 
-        <div className="mb-large">
-          <h2 className="text-h3 text-black mb-medium">Work</h2>
-          <p className="text-small text-medium-gray mb-medium">
+        {item.images.length > 0 || item.assetFile ? (
+          <p className="text-small text-medium-gray mb-large">
             Source deck: {item.assetFile} ({item.pageCount} pages)
           </p>
-          <div className="flex flex-col gap-medium">
-            {item.images.map((file) => (
-              <img
-                key={file}
-                src={portfolioImageUrl(item.id, file)}
-                alt=""
-                className="w-full rounded-card border border-border-gray"
-                loading="lazy"
-              />
-            ))}
-          </div>
-        </div>
+        ) : null}
       </div>
     </div>
   );
