@@ -19,6 +19,7 @@ function getScrollTop(): number {
 }
 
 const CONTACT_OVERLAY_DELAY_MS = 7_000;
+const CONTACT_OVERLAY_DELAY_MOBILE_MS = 1_800;
 /** Scroll arrow after the brand equation has had a beat on screen. */
 const SCROLL_CUE_AFTER_TAGLINE_MS = 1_400;
 /** Artboard Y for the equation under the smash mark (1920×1080). */
@@ -65,7 +66,11 @@ export function HomeDesktop({ useUnifiedBand = false }: HomeDesktopProps) {
       setContactReady(false);
       return;
     }
-    const id = window.setTimeout(() => setContactReady(true), CONTACT_OVERLAY_DELAY_MS);
+    const mobile =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(hover: none), (pointer: coarse), (max-width: 720px)').matches;
+    const delay = mobile ? CONTACT_OVERLAY_DELAY_MOBILE_MS : CONTACT_OVERLAY_DELAY_MS;
+    const id = window.setTimeout(() => setContactReady(true), delay);
     return () => window.clearTimeout(id);
   }, [morphSettled]);
 

@@ -152,72 +152,6 @@ const heroCss = `
   display: block;
   pointer-events: none;
 }
-@media (hover: none), (pointer: coarse) {
-  .landing-hero-css-root--bands-revealed .landing-x-overlay svg {
-    pointer-events: none;
-    touch-action: none;
-  }
-  .landing-hero-css-root--bands-revealed .landing-x-overlay svg path,
-  .landing-hero-css-root--bands-revealed .landing-x-overlay svg polygon {
-    pointer-events: auto;
-    touch-action: none;
-  }
-}
-
-.landing-seam-nudges {
-  display: none;
-}
-@media (hover: none), (pointer: coarse), (max-width: 720px) {
-  .landing-seam-nudges {
-    display: block;
-    position: absolute;
-    inset: 0;
-    z-index: 55;
-    pointer-events: none;
-  }
-  .landing-seam-nudge {
-    pointer-events: auto;
-    position: absolute;
-    top: calc(100% * 520 / 1080);
-    width: 2.75rem;
-    height: 2.75rem;
-    padding: 0;
-    border: 1.5px solid rgba(54, 12, 94, 0.35);
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.92);
-    color: #360c5e;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .landing-seam-nudge::before {
-    content: '';
-    display: block;
-    width: 0.55rem;
-    height: 0.55rem;
-    margin: 0 auto;
-    border-right: 2px solid currentColor;
-    border-bottom: 2px solid currentColor;
-  }
-  .landing-seam-nudge--left {
-    left: 0.65rem;
-  }
-  .landing-seam-nudge--left::before {
-    transform: rotate(135deg);
-    margin-left: 1.05rem;
-  }
-  .landing-seam-nudge--right {
-    right: 0.65rem;
-  }
-  .landing-seam-nudge--right::before {
-    transform: rotate(-45deg);
-    margin-left: 0.85rem;
-  }
-  .landing-seam-nudge:active {
-    background: #360c5e;
-    color: #fff;
-    border-color: #360c5e;
-  }
-}
 
 /* Band reveal (Software wedge underlay; left half is DesignBand overlay) */
 .landing-hero-css-root svg #hero-band-right {
@@ -549,16 +483,6 @@ export function LandingHero({
   const [morphUnlocked, setMorphUnlocked] = useState(false);
   /** Large X finished growing — overlay X + seam measure may run; bands wait for this. */
   const [morphXReady, setMorphXReady] = useState(false);
-  /** Touch / coarse: show left/right seam open controls (wheel substitute). */
-  const [seamNudges, setSeamNudges] = useState(false);
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const mq = window.matchMedia('(hover: none), (pointer: coarse), (max-width: 720px)');
-    const sync = () => setSeamNudges(mq.matches);
-    sync();
-    mq.addEventListener('change', sync);
-    return () => mq.removeEventListener('change', sync);
-  }, []);
 
   /** Morph CSS only while scrubbing — after unlock, use the normal expanded hero path. */
   const morphScrubbing = scrollMorph && !morphUnlocked;
@@ -984,14 +908,26 @@ export function LandingHero({
   }, [expanded, bandsRevealed, maxRevealPx, setSeamPx, useUnifiedBand, morphScrubbing]);
 
   /**
-   * Touch / pen: horizontal drag on the hero moves the seam (wheel substitute).
-   * Vertical stays with page scroll. Band strips keep pan-x when browsing.
+   * Touch / pen: horizontal drag near the band strip moves the X seam.
+   * Touches above/below the band are ignored so the page can scroll back to smash.
    */
   useEffect(() => {
     const root = hostRef.current;
     if (!root) return;
     if (!expanded || !bandsRevealed || !(maxRevealPx > 0)) return;
     if (morphScrubbing) return;
+
+    /** Hero band strip in artboard units (see DesignBand / SoftwareBand). */
+    const BAND_TOP_U = 408.8 / 1080;
+    const BAND_BOT_U = (408.8 + BAND_TILE_VIEWBOX_H) / 1080;
+    const BAND_PAD = 0.03;
+
+    const inBandZone = (clientY: number): boolean => {
+      const r = root.getBoundingClientRect();
+      if (!(r.height > 0)) return false;
+      const y = (clientY - r.top) / r.height;
+      return y >= BAND_TOP_U - BAND_PAD && y <= BAND_BOT_U + BAND_PAD;
+    };
 
     let active = false;
     let pointerId: number | null = null;
@@ -1019,13 +955,13 @@ export function LandingHero({
     const onDown = (e: PointerEvent): void => {
       if (e.pointerType === 'mouse') return;
       if (e.pointerType !== 'touch' && e.pointerType !== 'pen') return;
+      if (!inBandZone(e.clientY)) return;
       const t = e.target as Element | null;
       if (
         t?.closest('button') ||
         t?.closest('a') ||
         t?.closest('[data-band-tile-index]') ||
-        t?.closest('[data-unified-tile]') ||
-        t?.closest('.landing-seam-nudge')
+        t?.closest('[data-unified-tile]')
       ) {
         return;
       }
@@ -1082,7 +1018,6 @@ export function LandingHero({
       e.preventDefault();
       lastX = e.clientX;
       const maxR = maxRevealPxRef.current;
-      /* Finger right → X follows right → design opens → seam decreases. */
       setSeamPx((prev) => {
         const base = prev ?? maxR / 2;
         return Math.min(maxR, Math.max(0, base - dx));
@@ -1312,43 +1247,7 @@ export function LandingHero({
             </span>
           </span>
         </p>
-        {seamNudges && designBandVisible && maxRevealPx > 0 ? (
-          <div className="landing-seam-nudges" role="group" aria-label="Open a portfolio band">
-            <button
-              type="button"
-              className="landing-seam-nudge landing-seam-nudge--left"
-              aria-label={
-                bandExploreSide === 'design'
-                  ? 'Center SparXion mark'
-                  : 'Discover product design'
-              }
-              onClick={() => {
-                const maxR = maxRevealPxRef.current;
-                setSeamPx((prev) => {
-                  const s = prev ?? maxR / 2;
-                  return s < maxR * 0.2 ? maxR / 2 : 0;
-                });
-              }}
-            />
-            <button
-              type="button"
-              className="landing-seam-nudge landing-seam-nudge--right"
-              aria-label={
-                bandExploreSide === 'software'
-                  ? 'Center SparXion mark'
-                  : 'Discover software design'
-              }
-              onClick={() => {
-                const maxR = maxRevealPxRef.current;
-                setSeamPx((prev) => {
-                  const s = prev ?? maxR / 2;
-                  return s > maxR * 0.8 ? maxR / 2 : maxR;
-                });
-              }}
-            />
-          </div>
-        ) : null}
-        {/* Large X overlay — touch/pen can drag it to move the seam */}
+        {/* Large X overlay — visual only; seam drag is band-zone pointer on the root */}
         <div
           ref={xOverlayRef}
           id="x-mark-large-overlay"

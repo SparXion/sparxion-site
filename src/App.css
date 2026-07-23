@@ -1229,8 +1229,46 @@ html.home-smash-hidden .home-hero__veil {
     height: 55dvh;
   }
 
+  /*
+   * Portrait band stage: don’t lock a full-bleed 100dvh trap with a giant X.
+   * Leave scroll slack above/below so you can return to the smash; scale the
+   * hero down so the band is the gesture target.
+   */
+  .home-morph--settled {
+    height: auto;
+    min-height: 135dvh;
+    padding: 14vh 0 22vh;
+    box-sizing: border-box;
+  }
+
+  .home-morph--settled .home-morph__sticky {
+    position: relative;
+    height: auto;
+    min-height: 0;
+    padding: 0 0.35rem;
+    align-items: center;
+  }
+
+  .home-morph--settled .landing-hero-css-root,
+  .home-morph--settled .landing-hero-css-root--scroll-morph {
+    width: min(96vw, calc(68dvh * 1920 / 1080)) !important;
+  }
+
+  .home-morph--settled .landing-hero-css-root svg,
+  .home-morph--settled .landing-hero-css-root--scroll-morph svg {
+    max-height: min(68dvh, calc(100vw * 1080 / 1920));
+  }
+
   .home-morph__sticky {
     padding: 0 0.35rem;
+  }
+
+  .home-contact-overlay {
+    bottom: max(3.5rem, calc(2.75rem + env(safe-area-inset-bottom)));
+  }
+
+  .home-morph__copy {
+    bottom: max(0.65rem, env(safe-area-inset-bottom));
   }
 
   .home-brand-phrase {
@@ -1256,12 +1294,7 @@ html.home-smash-hidden .home-hero__veil {
   }
 
   .home-contact-overlay {
-    bottom: max(3.5rem, calc(2.75rem + env(safe-area-inset-bottom)));
     font-size: 0.875rem;
     padding: 0.55rem 1.15rem;
-  }
-
-  .home-morph__copy {
-    bottom: max(0.65rem, env(safe-area-inset-bottom));
   }
 }
