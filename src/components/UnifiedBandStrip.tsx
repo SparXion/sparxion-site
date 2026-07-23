@@ -84,10 +84,19 @@ export type UnifiedBandStripProps = {
    * not this element — matches a 1920-wide viewport panning over a flat positioning JPG.
    */
   pageScrollMode?: boolean;
+  /** Mobile strip-only: omit the Large_X column between design and software. */
+  hideXDivider?: boolean;
+  /** Reports which half of the strip is in view (for discover copy). */
+  onExploreSideChange?: (side: 'design' | 'software' | null) => void;
 };
 
 export const UnifiedBandStrip = forwardRef<BandStripHandle, UnifiedBandStripProps>(
-  function UnifiedBandStrip({ className = '', pageScrollMode = false }, ref) {
+  function UnifiedBandStrip({
+    className = '',
+    pageScrollMode = false,
+    hideXDivider = false,
+    onExploreSideChange,
+  }, ref) {
     const navigate = useNavigate();
     const navigationType = useNavigationType();
     const scrollRef = useRef<HTMLDivElement>(null);
@@ -237,6 +246,19 @@ export const UnifiedBandStrip = forwardRef<BandStripHandle, UnifiedBandStripProp
     }, [applyCenterOrRestoreScroll, designTiles.length, softwareTiles.length, pageScrollMode]);
 
     useEffect(() => {
+      const reportExploreSide = (scrollLeft: number, maxLeft: number): void => {
+        if (!onExploreSideChange) return;
+        if (!(maxLeft > 1)) {
+          onExploreSideChange(null);
+          return;
+        }
+        const mid = maxLeft / 2;
+        const dead = Math.max(24, maxLeft * 0.08);
+        if (scrollLeft < mid - dead) onExploreSideChange('design');
+        else if (scrollLeft > mid + dead) onExploreSideChange('software');
+        else onExploreSideChange(null);
+      };
+
       const flush = (scrollLeft: number): void => {
         if (persistTimerRef.current !== undefined) {
           clearTimeout(persistTimerRef.current);
@@ -249,8 +271,11 @@ export const UnifiedBandStrip = forwardRef<BandStripHandle, UnifiedBandStripProp
 
       if (pageScrollMode) {
         const onScroll = (): void => {
+          const maxLeft = Math.max(0, document.documentElement.scrollWidth - window.innerWidth);
           flush(window.scrollX);
+          reportExploreSide(window.scrollX, maxLeft);
         };
+        onScroll();
         window.addEventListener('scroll', onScroll, { passive: true });
         return () => {
           window.removeEventListener('scroll', onScroll);
@@ -265,9 +290,12 @@ export const UnifiedBandStrip = forwardRef<BandStripHandle, UnifiedBandStripProp
 
       const onScroll = (): void => {
         if (el.scrollTop !== 0) el.scrollTop = 0;
+        const maxLeft = Math.max(0, el.scrollWidth - el.clientWidth);
         flush(el.scrollLeft);
+        reportExploreSide(el.scrollLeft, maxLeft);
       };
 
+      onScroll();
       el.addEventListener('scroll', onScroll, { passive: true });
       return () => {
         el.removeEventListener('scroll', onScroll);
@@ -275,7 +303,7 @@ export const UnifiedBandStrip = forwardRef<BandStripHandle, UnifiedBandStripProp
           clearTimeout(persistTimerRef.current);
         }
       };
-    }, [pageScrollMode]);
+    }, [pageScrollMode, onExploreSideChange]);
 
     const stepPxFromFirstTile = useCallback((): number => {
       const root = scrollRef.current;
@@ -471,22 +499,24 @@ export const UnifiedBandStrip = forwardRef<BandStripHandle, UnifiedBandStripProp
             })}
           </div>
 
-          <div
-            className="flex h-full shrink-0 items-center justify-center self-stretch overflow-hidden"
-            style={{
-              width: layout.dividerColWidth,
-              minWidth: pageScrollMode ? 40 : 'min(40px, 100cqh)',
-            }}
-            aria-hidden
-          >
-            <svg
-              className="max-h-full min-h-0 w-full"
-              viewBox={LARGE_X_VIEWBOX}
-              preserveAspectRatio="xMidYMid meet"
+          {!hideXDivider ? (
+            <div
+              className="flex h-full shrink-0 items-center justify-center self-stretch overflow-hidden"
+              style={{
+                width: layout.dividerColWidth,
+                minWidth: pageScrollMode ? 40 : 'min(40px, 100cqh)',
+              }}
+              aria-hidden
             >
-              <path fill="#360c5e" d={LARGE_X_PATH_D} />
-            </svg>
-          </div>
+              <svg
+                className="max-h-full min-h-0 w-full"
+                viewBox={LARGE_X_VIEWBOX}
+                preserveAspectRatio="xMidYMid meet"
+              >
+                <path fill="#360c5e" d={LARGE_X_PATH_D} />
+              </svg>
+            </div>
+          ) : null}
 
           <div className="flex h-full min-h-0 flex-row flex-nowrap items-stretch">
             {softwareTiles.map((item, i) => {

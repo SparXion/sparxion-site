@@ -144,6 +144,10 @@ const heroCss = `
 .landing-hero-css-root--bands-revealed {
   touch-action: pan-y;
 }
+/* Strip-only / unified: let the band claim horizontal flick (ancestor pan-y would kill it). */
+.landing-hero-css-root--unified-band-active.landing-hero-css-root--bands-revealed {
+  touch-action: manipulation;
+}
 /*
  * Invisible X-drag pad: band height × 7 (3× above + band + 3× below).
  * Sits under tiles / chrome; catches empty space for seam gestures.
@@ -326,6 +330,13 @@ const heroCss = `
   pointer-events: none !important;
 }
 
+.landing-hero-css-root--unified-band-active.landing-hero-css-root--bands-revealed #x-mark-large-overlay svg {
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: opacity 480ms ease, visibility 0s linear 480ms;
+}
+
 .landing-hero-css-root--unified-band-active.landing-hero-css-root--bands-revealed svg #hero-band-right {
   opacity: 0 !important;
   pointer-events: none !important;
@@ -498,6 +509,15 @@ export function LandingHero({
   const [morphUnlocked, setMorphUnlocked] = useState(false);
   /** Large X finished growing — overlay X + seam measure may run; bands wait for this. */
   const [morphXReady, setMorphXReady] = useState(false);
+  /**
+   * Former mobile “unified strip-only” path — replaced by MobileBandSplit
+   * (vertical product / X / software separation on continued scroll).
+   */
+  const stripOnlyActive = false;
+  const unifiedActive = useUnifiedBand || stripOnlyActive;
+  const [unifiedExploreSide, setUnifiedExploreSide] = useState<
+    'design' | 'software' | null
+  >(null);
 
   /** Morph CSS only while scrubbing — after unlock, use the normal expanded hero path. */
   const morphScrubbing = scrollMorph && !morphUnlocked;
@@ -505,23 +525,34 @@ export function LandingHero({
   const seamsReady =
     typeof xSeamPx === 'number' && typeof rightSeamPx === 'number';
   const designBandVisible =
-    expanded && bandsRevealed && (!morphScrubbing || seamsReady);
+    expanded && bandsRevealed && (!morphScrubbing || seamsReady || stripOnlyActive);
   const softwareBandVisible = designBandVisible;
 
   /**
    * Seam ↓ (X right) → design / product. Seam ↑ (X left) → software.
    * Dead zone around center so the phrase doesn't flicker at rest.
+   * Strip-only: driven by unified strip scroll instead of seam.
    */
   const bandExploreSide = useMemo((): 'design' | 'software' | null => {
     const bandLive =
       designBandVisible && (!scrollMorph || morphUnlocked) && maxRevealPx > 0;
     if (!bandLive) return null;
+    if (stripOnlyActive || useUnifiedBand) return unifiedExploreSide;
     const mid = maxRevealPx / 2;
     const dead = Math.max(24, maxRevealPx * 0.05);
     if (seamResolved < mid - dead) return 'design';
     if (seamResolved > mid + dead) return 'software';
     return null;
-  }, [designBandVisible, scrollMorph, morphUnlocked, maxRevealPx, seamResolved]);
+  }, [
+    designBandVisible,
+    scrollMorph,
+    morphUnlocked,
+    maxRevealPx,
+    seamResolved,
+    stripOnlyActive,
+    useUnifiedBand,
+    unifiedExploreSide,
+  ]);
 
   /** Keep the last category while the tail collapses so width can ease closed. */
   const [exploreCategory, setExploreCategory] = useState('');
@@ -715,7 +746,7 @@ export function LandingHero({
         svg?.querySelector<SVGPolygonElement>('#hero-band-right-dynamic-clip polygon') ?? null;
       const heroRight = svg?.querySelector<SVGElement>('#hero-band-right');
 
-      const inUnifiedExpanded = expanded && useUnifiedBand && maxRevealPx > 0;
+      const inUnifiedExpanded = expanded && unifiedActive && maxRevealPx > 0;
 
       if (heroRight) {
         if (inUnifiedExpanded && TEMP_DISABLE_HERO_RIGHT_SVG_CLIP) {
@@ -735,7 +766,7 @@ export function LandingHero({
         return;
       }
 
-      if (!expanded || !useUnifiedBand || maxRevealPx <= 0) {
+      if (!expanded || !unifiedActive || maxRevealPx <= 0) {
         poly.setAttribute('points', FULL_HERO_BAND_RIGHT_CLIP_POLYGON_POINTS);
         return;
       }
@@ -761,7 +792,7 @@ export function LandingHero({
     return () => {
       obs.disconnect();
     };
-  }, [useUnifiedBand, expanded, seamResolved, maxRevealPx, rightSeamPx]);
+  }, [unifiedActive, expanded, seamResolved, maxRevealPx, rightSeamPx]);
 
   /**
    * Hero wheel: derived state from seamPx + strip scroll (no separate React state).
@@ -773,6 +804,8 @@ export function LandingHero({
     if (!root) return;
     if (!expanded || !bandsRevealed || !(maxRevealPx > 0)) return;
     if (morphScrubbing) return;
+    /** Mobile strip-only: leave native overflow flick alone — no seam capture. */
+    if (stripOnlyActive) return;
 
     const stripMoved = (
       _rail: 'design' | 'software',
@@ -920,7 +953,7 @@ export function LandingHero({
 
     root.addEventListener('wheel', onWheel, { passive: false });
     return () => root.removeEventListener('wheel', onWheel);
-  }, [expanded, bandsRevealed, maxRevealPx, setSeamPx, useUnifiedBand, morphScrubbing]);
+  }, [expanded, bandsRevealed, maxRevealPx, setSeamPx, useUnifiedBand, morphScrubbing, stripOnlyActive]);
 
   /**
    * Touch / pen: invisible pad = band ± 3× band height. Horizontal drag uses the
@@ -932,6 +965,8 @@ export function LandingHero({
     if (!root) return;
     if (!expanded || !bandsRevealed || !(maxRevealPx > 0)) return;
     if (morphScrubbing) return;
+    /** Mobile strip-only: leave native overflow flick alone — no seam capture. */
+    if (stripOnlyActive) return;
 
     const BAND_H_U = BAND_TILE_VIEWBOX_H / 1080;
     const BAND_TOP_U = 408.8 / 1080;
@@ -1098,6 +1133,7 @@ export function LandingHero({
     setSeamPx,
     useUnifiedBand,
     morphScrubbing,
+    stripOnlyActive,
   ]);
 
   const handlePointerMove = useCallback(
@@ -1197,7 +1233,7 @@ export function LandingHero({
             ? 'min-h-0 h-auto py-0'
             : 'min-h-0 h-full py-0'
           : 'min-h-screen py-10',
-        useUnifiedBand ? 'px-0' : 'px-3',
+        useUnifiedBand || stripOnlyActive ? 'px-0' : 'px-3',
       ]
         .filter(Boolean)
         .join(' ')}
@@ -1208,14 +1244,14 @@ export function LandingHero({
         ref={hostRef}
         className={[
           'landing-hero-css-root max-w-none',
-          useUnifiedBand ? 'landing-hero-css-root--unified-band-page' : '',
+          unifiedActive ? 'landing-hero-css-root--unified-band-page' : '',
           morphScrubbing ? 'landing-hero-css-root--scroll-morph' : '',
           expanded ? 'landing-hero-css-root--expanded' : '',
           expanded && (landingRestored || morphUnlocked)
             ? 'landing-hero-css-root--landing-restored'
             : '',
           expanded && bandsRevealed ? 'landing-hero-css-root--bands-revealed' : '',
-          expanded && useUnifiedBand ? 'landing-hero-css-root--unified-band-active' : '',
+          expanded && unifiedActive ? 'landing-hero-css-root--unified-band-active' : '',
           xHover && !expanded && !scrollMorph ? 'landing-hero-css-root--x-hover' : '',
         ]
           .filter(Boolean)
@@ -1226,13 +1262,13 @@ export function LandingHero({
         onKeyDown={handleKeyDown}
       >
         <div dangerouslySetInnerHTML={{ __html: landingHeroSvg }} />
-        {expanded && bandsRevealed && !morphScrubbing ? (
+        {expanded && bandsRevealed && !morphScrubbing && !stripOnlyActive ? (
           <div
             className="landing-seam-gesture-zone"
             aria-hidden
           />
         ) : null}
-        {useUnifiedBand && designBandVisible ? (
+        {unifiedActive && designBandVisible ? (
           <div
             className="landing-unified-band-root pointer-events-auto absolute left-0 z-[22] w-full transition-opacity duration-300"
             style={{
@@ -1243,11 +1279,13 @@ export function LandingHero({
             <UnifiedBandStrip
               ref={unifiedStripRef}
               className="h-full min-h-0 w-full"
-              pageScrollMode
+              pageScrollMode={useUnifiedBand && !stripOnlyActive}
+              hideXDivider={stripOnlyActive}
+              onExploreSideChange={setUnifiedExploreSide}
             />
           </div>
         ) : null}
-        {!useUnifiedBand ? (
+        {!unifiedActive ? (
           <>
             <DesignBand
               ref={designStripRef}

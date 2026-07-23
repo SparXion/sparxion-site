@@ -58,6 +58,7 @@ html.unified-band-page footer {
 .band-strip-scroll {
   scrollbar-width: none;
   -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
 }
 
 .band-strip-scroll::-webkit-scrollbar {

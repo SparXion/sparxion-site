@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { LandingHero } from '../components/LandingHero';
+import { MobileBandSplit } from '../components/MobileBandSplit';
 import { UNIFIED_BAND_PAGE_WIDTH_CSS } from '../lib/unifiedBandLayout';
 
 function clamp01(n: number): number {
@@ -33,6 +34,8 @@ const CUE_CLEARANCE_PX = 28;
  */
 const EQUATION_OFF_PAGE_GAP_PX = 28;
 
+const MOBILE_HOME_MQ = '(hover: none), (pointer: coarse), (max-width: 720px)';
+
 type HomeDesktopProps = {
   useUnifiedBand?: boolean;
 };
@@ -44,6 +47,8 @@ export function HomeDesktop({ useUnifiedBand = false }: HomeDesktopProps) {
   const [taglineVisible, setTaglineVisible] = useState(false);
   const [morphProgress, setMorphProgress] = useState(0);
   const [morphSettled, setMorphSettled] = useState(false);
+  const [splitProgress, setSplitProgress] = useState(0);
+  const [isMobileHome, setIsMobileHome] = useState(false);
   const [contactReady, setContactReady] = useState(false);
   const [equationTopPx, setEquationTopPx] = useState(0);
   const morphTrackRef = useRef<HTMLElement>(null);
@@ -54,6 +59,7 @@ export function HomeDesktop({ useUnifiedBand = false }: HomeDesktopProps) {
   const reduceMotionRef = useRef(false);
   /** Hold morph at complete through sticky end bounce; clear when scrolling back into the track. */
   const morphCompleteLatchedRef = useRef(false);
+  const isMobileHomeRef = useRef(false);
 
   useEffect(() => {
     reduceMotionRef.current =
@@ -62,17 +68,29 @@ export function HomeDesktop({ useUnifiedBand = false }: HomeDesktopProps) {
   }, []);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mq = window.matchMedia(MOBILE_HOME_MQ);
+    const sync = (): void => {
+      isMobileHomeRef.current = mq.matches;
+      setIsMobileHome(mq.matches);
+    };
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
+  }, []);
+
+  useEffect(() => {
     if (!morphSettled) {
       setContactReady(false);
       return;
     }
-    const mobile =
-      typeof window !== 'undefined' &&
-      window.matchMedia('(hover: none), (pointer: coarse), (max-width: 720px)').matches;
-    const delay = mobile ? CONTACT_OVERLAY_DELAY_MOBILE_MS : CONTACT_OVERLAY_DELAY_MS;
+    /** On mobile, wait until bands have mostly split so Contact isn't over the cluster. */
+    const delay = isMobileHome
+      ? CONTACT_OVERLAY_DELAY_MOBILE_MS
+      : CONTACT_OVERLAY_DELAY_MS;
     const id = window.setTimeout(() => setContactReady(true), delay);
     return () => window.clearTimeout(id);
-  }, [morphSettled]);
+  }, [morphSettled, isMobileHome]);
 
   useEffect(() => {
     if (!taglineVisible) {
@@ -122,18 +140,34 @@ export function HomeDesktop({ useUnifiedBand = false }: HomeDesktopProps) {
       morphCompleteLatchedRef.current = true;
       setMorphProgress(1);
       setMorphSettled(true);
+      setSplitProgress(isMobileHomeRef.current ? 1 : 0);
       return;
     }
-    if (morphCompleteLatchedRef.current && track.classList.contains('home-morph--settled')) {
-      setMorphProgress(1);
-      setMorphSettled(true);
-      return;
-    }
+
+    const mobile = isMobileHomeRef.current;
     const rect = track.getBoundingClientRect();
     const scrollTop = getScrollTop();
     const trackTop = scrollTop + rect.top;
     const scrollable = Math.max(1, track.offsetHeight - window.innerHeight);
     const raw = clamp01((scrollTop - trackTop) / scrollable);
+
+    /*
+     * Mobile settled track is taller (morph dock + split runway). Once latched,
+     * keep morph at 1 and map remaining scroll into splitProgress.
+     */
+    if (mobile && morphCompleteLatchedRef.current && track.classList.contains('home-morph--settled')) {
+      setMorphProgress(1);
+      setMorphSettled(true);
+      setSplitProgress(raw);
+      return;
+    }
+
+    if (morphCompleteLatchedRef.current && track.classList.contains('home-morph--settled')) {
+      setMorphProgress(1);
+      setMorphSettled(true);
+      setSplitProgress(0);
+      return;
+    }
 
     if (raw >= 0.98) morphCompleteLatchedRef.current = true;
     else if (raw < 0.75) morphCompleteLatchedRef.current = false;
@@ -141,18 +175,20 @@ export function HomeDesktop({ useUnifiedBand = false }: HomeDesktopProps) {
     const complete = morphCompleteLatchedRef.current && raw >= 0.75;
     setMorphProgress(complete ? 1 : raw);
     setMorphSettled(complete);
+    if (!complete) setSplitProgress(0);
   }, []);
 
   useLayoutEffect(() => {
     if (!morphSettled) return;
     const track = morphTrackRef.current;
     if (!track) return;
+    /** Dock sticky at the morph-complete scroll; mobile can continue into split. */
     window.scrollTo(0, track.offsetTop);
   }, [morphSettled]);
 
-  /** Settled dock: band stays mid-viewport — no scrolling past it (only up to smash). */
+  /** Desktop settled dock: band stays mid-viewport — no scrolling past it. */
   useEffect(() => {
-    if (!morphSettled) return;
+    if (!morphSettled || isMobileHome) return;
     const clampDown = () => {
       const track = morphTrackRef.current;
       if (!track) return;
@@ -173,7 +209,7 @@ export function HomeDesktop({ useUnifiedBand = false }: HomeDesktopProps) {
       document.removeEventListener('scroll', clampDown);
       document.body.removeEventListener('scroll', clampDown);
     };
-  }, [morphSettled]);
+  }, [morphSettled, isMobileHome]);
 
   useEffect(() => {
     const tick = () => {
@@ -213,6 +249,17 @@ export function HomeDesktop({ useUnifiedBand = false }: HomeDesktopProps) {
   const scrollToMorph = () => {
     morphTrackRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
+
+  const showMobileSplit = isMobileHome && morphSettled;
+  /** Keep LandingHero until scroll starts the split so “full-size hero band” still reads. */
+  const showSplitUi = showMobileSplit && splitProgress > 0.04;
+  const splitUiProgress = showSplitUi
+    ? clamp01((splitProgress - 0.04) / 0.96)
+    : 0;
+  const contactVisible =
+    morphSettled &&
+    contactReady &&
+    (!isMobileHome || splitProgress > 0.55);
 
   return (
     <div
@@ -261,27 +308,37 @@ export function HomeDesktop({ useUnifiedBand = false }: HomeDesktopProps) {
       <section
         ref={morphTrackRef}
         id="work"
-        className={['home-morph', morphSettled ? 'home-morph--settled' : '']
+        className={[
+          'home-morph',
+          morphSettled ? 'home-morph--settled' : '',
+          showMobileSplit ? 'home-morph--mobile-split' : '',
+        ]
           .filter(Boolean)
           .join(' ')}
         aria-label="Explore the work"
         data-morph-progress={morphProgress.toFixed(3)}
+        data-split-progress={splitProgress.toFixed(3)}
       >
         <div className="home-morph__sticky" ref={morphStickyRef}>
-          <LandingHero
-            useUnifiedBand={useUnifiedBand}
-            morphProgress={morphProgress}
-          />
+          {showSplitUi ? (
+            <MobileBandSplit progress={splitUiProgress} />
+          ) : (
+            <LandingHero
+              useUnifiedBand={useUnifiedBand}
+              morphProgress={morphProgress}
+            />
+          )}
           <Link
             to="/contact"
             className={[
               'home-contact-overlay',
-              morphSettled && contactReady ? 'home-contact-overlay--visible' : '',
+              contactVisible ? 'home-contact-overlay--visible' : '',
+              showSplitUi ? 'home-contact-overlay--split' : '',
             ]
               .filter(Boolean)
               .join(' ')}
-            tabIndex={morphSettled && contactReady ? 0 : -1}
-            aria-hidden={!(morphSettled && contactReady)}
+            tabIndex={contactVisible ? 0 : -1}
+            aria-hidden={!contactVisible}
           >
             Contact
           </Link>

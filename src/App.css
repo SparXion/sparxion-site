@@ -1230,15 +1230,20 @@ html.home-smash-hidden .home-hero__veil {
   }
 
   /*
-   * Portrait dock: band stage fills one viewport, artboard centered so the
-   * strip sits mid-screen. No extra runway below — only scroll up to smash.
-   * Contact parks under the artboard (not over the band / discover).
+   * Portrait dock + continued-scroll split runway:
+   * sticky stays one viewport; track grows so further scroll separates
+   * product ↑ / X / software ↓ (see MobileBandSplit).
    */
   .home-morph--settled {
     height: 100vh;
     height: 100dvh;
     min-height: 0;
     padding: 0;
+  }
+
+  .home-morph--settled.home-morph--mobile-split {
+    height: 240vh;
+    height: 240dvh;
   }
 
   .home-morph--settled .home-morph__sticky {
@@ -1280,6 +1285,11 @@ html.home-smash-hidden .home-hero__veil {
     padding: 0.55rem 1.15rem;
   }
 
+  .home-contact-overlay--split {
+    top: auto;
+    bottom: max(1.1rem, calc(0.65rem + env(safe-area-inset-bottom)));
+  }
+
   .home-contact-overlay:hover {
     transform: translate(-50%, -1px);
   }
@@ -1308,5 +1318,75 @@ html.home-smash-hidden .home-hero__veil {
     bottom: max(1.25rem, calc(0.5rem + env(safe-area-inset-bottom)));
     width: 3rem;
     height: 3rem;
+  }
+
+  /* ——— Mobile band split stage ——— */
+  .mobile-band-split {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .mobile-band-split__rail {
+    position: absolute;
+    left: 50%;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: center;
+    gap: 0.35rem;
+    transform: translate(-50%, -50%);
+    will-change: top, width, height;
+  }
+
+  .mobile-band-split__strip {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+    overflow: hidden;
+  }
+
+  .mobile-band-split__strip .band-strip-root,
+  .mobile-band-split__strip .band-strip-scroll {
+    height: 100%;
+  }
+
+  .mobile-band-split__label {
+    margin: 0;
+    padding: 0 0.25rem;
+    font-family: 'Exo 2', sans-serif;
+    font-weight: 500;
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #360c5e;
+    text-align: center;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .mobile-band-split__rail--product .mobile-band-split__label {
+    order: -1;
+  }
+
+  .mobile-band-split__x {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    z-index: 25;
+    width: min(28vw, 7.5rem);
+    height: min(28vw, 7.5rem);
+    pointer-events: none;
+    will-change: transform, opacity;
+  }
+
+  .mobile-band-split__x svg {
+    display: block;
+    width: 100%;
+    height: 100%;
   }
 }
