@@ -1230,41 +1230,58 @@ html.home-smash-hidden .home-hero__veil {
   }
 
   /*
-   * Portrait band stage: don’t lock a full-bleed 100dvh trap with a giant X.
-   * Leave scroll slack above/below so you can return to the smash; scale the
-   * hero down so the band is the gesture target.
+   * Portrait dock: band stage fills one viewport, artboard centered so the
+   * strip sits mid-screen. No extra runway below — only scroll up to smash.
+   * Contact parks under the artboard (not over the band / discover).
    */
   .home-morph--settled {
-    height: auto;
-    min-height: 135dvh;
-    padding: 14vh 0 22vh;
-    box-sizing: border-box;
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0;
+    padding: 0;
   }
 
   .home-morph--settled .home-morph__sticky {
-    position: relative;
-    height: auto;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    height: 100dvh;
     min-height: 0;
     padding: 0 0.35rem;
+    display: flex;
+    flex-direction: column;
     align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
   }
 
   .home-morph--settled .landing-hero-css-root,
   .home-morph--settled .landing-hero-css-root--scroll-morph {
-    width: min(96vw, calc(68dvh * 1920 / 1080)) !important;
+    width: min(96vw, calc(56dvh * 1920 / 1080)) !important;
   }
 
   .home-morph--settled .landing-hero-css-root svg,
   .home-morph--settled .landing-hero-css-root--scroll-morph svg {
-    max-height: min(68dvh, calc(100vw * 1080 / 1920));
+    max-height: min(56dvh, calc(100vw * 1080 / 1920));
   }
 
   .home-morph__sticky {
     padding: 0 0.35rem;
   }
 
+  /* Under artboard bottom: 50% + half of max artboard height + gap. */
   .home-contact-overlay {
-    bottom: max(3.5rem, calc(2.75rem + env(safe-area-inset-bottom)));
+    position: absolute;
+    left: 50%;
+    top: calc(50% + min(28dvh, calc(96vw * 1080 / 3840)) + 0.85rem);
+    bottom: auto;
+    transform: translateX(-50%);
+    font-size: 0.875rem;
+    padding: 0.55rem 1.15rem;
+  }
+
+  .home-contact-overlay:hover {
+    transform: translate(-50%, -1px);
   }
 
   .home-morph__copy {
@@ -1284,17 +1301,12 @@ html.home-smash-hidden .home-hero__veil {
   }
 
   .home-brand-phrase--artboard {
-    top: calc(100% * 880 / 1080);
+    top: calc(100% * 860 / 1080);
   }
 
   .home-scroll-cue {
     bottom: max(1.25rem, calc(0.5rem + env(safe-area-inset-bottom)));
     width: 3rem;
     height: 3rem;
-  }
-
-  .home-contact-overlay {
-    font-size: 0.875rem;
-    padding: 0.55rem 1.15rem;
   }
 }

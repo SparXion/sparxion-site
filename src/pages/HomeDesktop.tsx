@@ -150,6 +150,31 @@ export function HomeDesktop({ useUnifiedBand = false }: HomeDesktopProps) {
     window.scrollTo(0, track.offsetTop);
   }, [morphSettled]);
 
+  /** Settled dock: band stays mid-viewport — no scrolling past it (only up to smash). */
+  useEffect(() => {
+    if (!morphSettled) return;
+    const clampDown = () => {
+      const track = morphTrackRef.current;
+      if (!track) return;
+      const max = track.offsetTop;
+      if (getScrollTop() > max + 0.5) {
+        const se = document.scrollingElement;
+        if (se) se.scrollTop = max;
+        window.scrollTo(0, max);
+      }
+    };
+    clampDown();
+    const opts: AddEventListenerOptions = { passive: true };
+    window.addEventListener('scroll', clampDown, opts);
+    document.addEventListener('scroll', clampDown, opts);
+    document.body.addEventListener('scroll', clampDown, opts);
+    return () => {
+      window.removeEventListener('scroll', clampDown);
+      document.removeEventListener('scroll', clampDown);
+      document.body.removeEventListener('scroll', clampDown);
+    };
+  }, [morphSettled]);
+
   useEffect(() => {
     const tick = () => {
       updateMorphProgress();

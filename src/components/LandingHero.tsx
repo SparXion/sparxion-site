@@ -101,6 +101,7 @@ const heroCss = `
   box-sizing: border-box;
   width: min(96vw, calc(100vh * 1920 / 1080));
   --landing-reveal-px: 0px;
+  overflow: visible;
 }
 
 /* Wide unified canvas: hero spans full artboard width (parent sets width via 100vh scale). */
@@ -141,6 +142,20 @@ const heroCss = `
 }
 
 .landing-hero-css-root--bands-revealed {
+  touch-action: pan-y;
+}
+/*
+ * Invisible X-drag pad: band height × 7 (3× above + band + 3× below).
+ * Sits under tiles / chrome; catches empty space for seam gestures.
+ */
+.landing-seam-gesture-zone {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% * (408.8 - 3 * 296) / 1080);
+  height: calc(100% * (7 * 296) / 1080);
+  z-index: 18;
+  pointer-events: auto;
   touch-action: pan-y;
 }
 .landing-x-overlay {
@@ -908,8 +923,9 @@ export function LandingHero({
   }, [expanded, bandsRevealed, maxRevealPx, setSeamPx, useUnifiedBand, morphScrubbing]);
 
   /**
-   * Touch / pen: horizontal drag near the band strip moves the X seam.
-   * Touches above/below the band are ignored so the page can scroll back to smash.
+   * Touch / pen: invisible pad = band ± 3× band height. Horizontal drag uses the
+   * same seam / strip routing as the wheel. Vertical drag is left for page scroll
+   * (back to smash).
    */
   useEffect(() => {
     const root = hostRef.current;
@@ -917,16 +933,47 @@ export function LandingHero({
     if (!expanded || !bandsRevealed || !(maxRevealPx > 0)) return;
     if (morphScrubbing) return;
 
-    /** Hero band strip in artboard units (see DesignBand / SoftwareBand). */
+    const BAND_H_U = BAND_TILE_VIEWBOX_H / 1080;
     const BAND_TOP_U = 408.8 / 1080;
-    const BAND_BOT_U = (408.8 + BAND_TILE_VIEWBOX_H) / 1080;
-    const BAND_PAD = 0.03;
+    const BAND_BOT_U = BAND_TOP_U + BAND_H_U;
+    /** Invisible X-drag pad: 3× band height above and below the strip. */
+    const ZONE_TOP_U = BAND_TOP_U - 3 * BAND_H_U;
+    const ZONE_BOT_U = BAND_BOT_U + 3 * BAND_H_U;
 
-    const inBandZone = (clientY: number): boolean => {
+    const inSeamGestureZone = (clientY: number): boolean => {
       const r = root.getBoundingClientRect();
       if (!(r.height > 0)) return false;
       const y = (clientY - r.top) / r.height;
-      return y >= BAND_TOP_U - BAND_PAD && y <= BAND_BOT_U + BAND_PAD;
+      return y >= ZONE_TOP_U && y <= ZONE_BOT_U;
+    };
+
+    const stripMoved = (
+      strip: BandStripHandle | null,
+      dx: number,
+    ): boolean => {
+      if (!strip) return false;
+      const before = strip.getScrollLeft();
+      strip.scrollHorizontalBy(dx);
+      return Math.abs(strip.getScrollLeft() - before) > 0.5;
+    };
+
+    const scrollDeltaClamped = (
+      info: { left: number; max: number } | undefined,
+      dx: number,
+    ): number => {
+      if (!info || !(info.max > 1) || !Number.isFinite(dx) || dx === 0) return dx;
+      if (info.left <= STRIP_AT_END_PX && dx < 0) return -dx;
+      if (info.left >= info.max - STRIP_AT_END_PX && dx > 0) return -dx;
+      return dx;
+    };
+
+    /** Match wheel interior physics: Δseam = d / 2. */
+    const applySeamDelta = (d: number): void => {
+      const maxR = maxRevealPxRef.current;
+      setSeamPx((prev) => {
+        const base = prev ?? maxR / 2;
+        return Math.min(maxR, Math.max(0, base + d / 2));
+      });
     };
 
     let active = false;
@@ -955,7 +1002,7 @@ export function LandingHero({
     const onDown = (e: PointerEvent): void => {
       if (e.pointerType === 'mouse') return;
       if (e.pointerType !== 'touch' && e.pointerType !== 'pen') return;
-      if (!inBandZone(e.clientY)) return;
+      if (!inSeamGestureZone(e.clientY)) return;
       const t = e.target as Element | null;
       if (
         t?.closest('button') ||
@@ -987,25 +1034,6 @@ export function LandingHero({
           pointerId = null;
           return;
         }
-        const maxR = maxRevealPxRef.current;
-        const s = seamPxRef.current;
-        const designStrip = useUnifiedBand
-          ? unifiedStripRef.current
-          : designStripRef.current;
-        const softwareStrip = useUnifiedBand
-          ? unifiedStripRef.current
-          : softwareStripRef.current;
-        const state = deriveHeroWheelState(
-          s,
-          maxR,
-          designStrip?.getScrollInfo(),
-          softwareStrip?.getScrollInfo(),
-        );
-        if (state === 'design-browsing' || state === 'software-browsing') {
-          active = false;
-          pointerId = null;
-          return;
-        }
         dragging = true;
         try {
           root.setPointerCapture(e.pointerId);
@@ -1017,11 +1045,40 @@ export function LandingHero({
       if (!dragging || axis !== 'h') return;
       e.preventDefault();
       lastX = e.clientX;
+
       const maxR = maxRevealPxRef.current;
-      setSeamPx((prev) => {
-        const base = prev ?? maxR / 2;
-        return Math.min(maxR, Math.max(0, base - dx));
-      });
+      const s = seamPxRef.current;
+      const designStrip = useUnifiedBand
+        ? unifiedStripRef.current
+        : designStripRef.current;
+      const softwareStrip = useUnifiedBand
+        ? unifiedStripRef.current
+        : softwareStripRef.current;
+      const D = designStrip?.getScrollInfo();
+      const S = softwareStrip?.getScrollInfo();
+      const state = deriveHeroWheelState(s, maxR, D, S);
+
+      switch (state) {
+        case 'interior':
+          applySeamDelta(dx);
+          return;
+        case 'design-at-home':
+          if (stripMoved(designStrip, dx)) return;
+          applySeamDelta(dx);
+          return;
+        case 'design-browsing':
+          stripMoved(designStrip, scrollDeltaClamped(D, dx));
+          return;
+        case 'software-at-home':
+          if (stripMoved(softwareStrip, dx)) return;
+          applySeamDelta(dx);
+          return;
+        case 'software-browsing':
+          stripMoved(softwareStrip, scrollDeltaClamped(S, dx));
+          return;
+        default:
+          return;
+      }
     };
 
     root.addEventListener('pointerdown', onDown);
@@ -1135,7 +1192,11 @@ export function LandingHero({
     <section
       className={[
         'flex w-full flex-shrink-0 flex-col items-center justify-center bg-white',
-        scrollMorph ? 'min-h-0 h-full py-0' : 'min-h-screen py-10',
+        scrollMorph
+          ? morphUnlocked
+            ? 'min-h-0 h-auto py-0'
+            : 'min-h-0 h-full py-0'
+          : 'min-h-screen py-10',
         useUnifiedBand ? 'px-0' : 'px-3',
       ]
         .filter(Boolean)
@@ -1165,6 +1226,12 @@ export function LandingHero({
         onKeyDown={handleKeyDown}
       >
         <div dangerouslySetInnerHTML={{ __html: landingHeroSvg }} />
+        {expanded && bandsRevealed && !morphScrubbing ? (
+          <div
+            className="landing-seam-gesture-zone"
+            aria-hidden
+          />
+        ) : null}
         {useUnifiedBand && designBandVisible ? (
           <div
             className="landing-unified-band-root pointer-events-auto absolute left-0 z-[22] w-full transition-opacity duration-300"
@@ -1247,7 +1314,7 @@ export function LandingHero({
             </span>
           </span>
         </p>
-        {/* Large X overlay — visual only; seam drag is band-zone pointer on the root */}
+        {/* Large X overlay — visual only; seam drag is the invisible pad + root */}
         <div
           ref={xOverlayRef}
           id="x-mark-large-overlay"
