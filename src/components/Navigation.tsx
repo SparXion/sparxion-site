@@ -29,6 +29,7 @@ export function Navigation() {
 
   const navItems = [
     { label: 'Journey', path: '/journey' },
+    { label: 'Resume', path: '/resume' },
     { label: 'Ethos', path: '/ethos' },
     { label: 'Contact', path: '/contact' },
   ];

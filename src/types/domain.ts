@@ -94,6 +94,70 @@ export interface NavigationItem {
   external?: boolean;
 }
 
+// ——— Resume module ———
+// The resume "database". Every capability and experience is tagged with one or
+// more focus areas so a visitor can curate the resume down to what they care
+// about, then download exactly that view (PDF/Markdown). The same structured
+// data is the future feed for the xAI-powered capability chatbot.
+
+export type ResumeFocusArea =
+  | 'physical' // Physical & Industrial Product Design
+  | 'digital' // Digital, Software & AI Tools
+  | 'creative' // Creative Direction & Storytelling
+  | 'leadership'; // Leadership, Strategy & Enterprise
+
+export interface ResumeFocusAreaMeta {
+  id: ResumeFocusArea;
+  label: string;
+  blurb: string;
+}
+
+export interface ResumeExperience {
+  id: string;
+  role: string;
+  org: string;
+  location?: string;
+  timeRange: { start: number; end: number | 'Present' };
+  focusAreas: ResumeFocusArea[];
+  summary: string;
+  highlights: string[];
+  clients?: string[];
+  /** Optional deep-link into the site (portfolio/software/journey). */
+  href?: string;
+}
+
+export interface ResumeSkillGroup {
+  id: string;
+  title: string;
+  focusAreas: ResumeFocusArea[];
+  skills: string[];
+}
+
+export interface ResumeEducation {
+  institution: string;
+  credential: string;
+  detail?: string;
+  timeRange?: { start: number; end: number };
+}
+
+export interface Resume {
+  name: string;
+  title: string;
+  tagline: string;
+  location: string;
+  email: string;
+  phone?: string;
+  website?: string;
+  linkedin?: string;
+  summary: string;
+  focusAreas: ResumeFocusAreaMeta[];
+  skillGroups: ResumeSkillGroup[];
+  experience: ResumeExperience[];
+  education: ResumeEducation[];
+  /** Marquee clients across the career, for a quick credibility strip. */
+  selectedClients: string[];
+}
+
 export interface FooterContent {
   copyright: string;
   links: NavigationItem[];

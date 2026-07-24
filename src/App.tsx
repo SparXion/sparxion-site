@@ -4,6 +4,7 @@ import { Navigation } from './components/Navigation';
 import { Footer } from './components/Footer';
 import { HomePage } from './pages/HomePage';
 import { JourneyPage } from './pages/JourneyPage';
+import { ResumePage } from './pages/ResumePage';
 import { EthosPage } from './pages/EthosPage';
 import { UcidAppRedirect } from './pages/UcidAppRedirect';
 import { AITunerPage } from './pages/AITunerPage';
@@ -40,6 +41,7 @@ function AppChrome() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/journey" element={<JourneyPage />} />
+          <Route path="/resume" element={<ResumePage />} />
           <Route path="/portfolio" element={<PortfolioPage />} />
           <Route path="/portfolio/:id" element={<PortfolioProjectPage />} />
           <Route path="/software" element={<SoftwarePage />} />
