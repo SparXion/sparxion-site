@@ -944,6 +944,17 @@ html.home-smash-hidden .home-hero__veil {
   color: var(--sx-ink);
 }
 
+.contact-page__link {
+  color: var(--sx-ink);
+  text-decoration: none;
+  border-bottom: 1.5px solid var(--sx-line-strong);
+  transition: border-color 200ms ease;
+}
+
+.contact-page__link:hover {
+  border-bottom-color: var(--sx-ink);
+}
+
 .contact-page__apps-label {
   font-family: 'Figtree', sans-serif;
   font-size: 0.95rem;

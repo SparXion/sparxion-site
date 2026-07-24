@@ -26,6 +26,7 @@ export interface Person {
   contactInfo: {
     email: string; // "john@sparxion.com"
     location: string; // "Cincinnati"
+    linkedin?: string; // "https://www.linkedin.com/in/john-violette"
   };
 }
 

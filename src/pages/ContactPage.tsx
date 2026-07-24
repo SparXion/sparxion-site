@@ -24,6 +24,19 @@ export function ContactPage() {
             <dd>Cincinnati, Ohio</dd>
           </div>
           <div>
+            <dt>LinkedIn</dt>
+            <dd>
+              <a
+                href="https://www.linkedin.com/in/john-violette"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="contact-page__link"
+              >
+                linkedin.com/in/john-violette
+              </a>
+            </dd>
+          </div>
+          <div>
             <dt>Open to</dt>
             <dd>
               Design partnerships, product and AI tool collaborations, and
